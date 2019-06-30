@@ -1,16 +1,17 @@
 pragma(lib, "gtkd-3");
-//pragma(lib, "dl");
 
-import gtk.MainWindow;
-import gtk.Label;
+import gtk.Builder;
 import gtk.Main;
+import gtk.Window;
+import std.stdio;
 
 void main(string[] args)
 {
     Main.init(args);
-    MainWindow win = new MainWindow("Hello World");
-    win.setDefaultSize(200, 100);
-    win.add(new Label("Hello World"));
-    win.showAll();
+    Builder builder = new Builder();
+    builder.addFromFile("design.glade");
+    Window w = cast(Window)builder.getObject("main-window");
+    w.addOnHide( delegate void(Widget){ Main.quit(); } );
+    w.showAll();
     Main.run();
 }
