@@ -1,0 +1,10 @@
+{
+    "name": "color-generator",
+    "description": "A color generator GTK application",
+    "targetType": "executable",
+    "targetName": "main",
+    "sourceFiles": ["main.d"],
+    "dependencies": {
+        "gtk-d:gtkd": {"path": "/home/yashock/GtkD" },
+    }
+}
