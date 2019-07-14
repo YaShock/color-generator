@@ -6,6 +6,8 @@ import gtk.Window;
 import gtk.Scale;
 import gtk.Range;
 import gtk.Label;
+import gtk.Button;
+import gtk.Box;
 import gdk.RGBA;
 import std.stdio;
 import std.math;
@@ -21,10 +23,24 @@ struct RGB {
             return b;
         throw new Exception("Invalid index");
     }
+
+    RGB opMul(double s) const {
+        return RGB(s*r, s*g, s*b);
+    }
 };
 
 struct XYZ {
     double X, Y, Z;
+
+    ref double opIndex(int i) {
+        if (i == 0)
+            return X;
+        if (i == 1)
+            return Y;
+        if (i == 2)
+            return Z;
+        throw new Exception("Invalid index");
+    }
 };
 
 struct LUV {
@@ -58,6 +74,21 @@ XYZ rgbToXYZ(RGB rgb, double gamma) {
     return XYZ(xyz[0], xyz[1], xyz[2]);
 }
 
+RGB xyzToRGB(XYZ xyz, double gamma) {
+    double[][] Minv = [
+        [3.2404542, -1.5371385, -0.4985314],
+        [-0.9692660, 1.8760108, 0.0415560],
+        [0.0556434, -0.2040259, 1.0572252]
+    ];
+    double[] rgb = [0, 0, 0];
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            rgb[i] += pow(xyz[j], 1/gamma) * Minv[i][j];
+        }
+    }
+    return RGB(rgb[0], rgb[1], rgb[2]);
+}
+
 LUV xyzToLUV(XYZ xyz) {
     const double Xn = 0.95047;
     const double Yn = 1.0;
@@ -77,6 +108,29 @@ LUV xyzToLUV(XYZ xyz) {
     return LUV(L, 13*L*(U-Un), 13*L*(V-Vn));
 }
 
+XYZ luvToXYZ(LUV luv) {
+    const double Xn = 0.95047;
+    const double Yn = 1.0;
+    const double Zn = 1.08883;
+    const double eps = 0.008856;
+    const double ki = 903.3;
+    const double L = luv.L;
+
+    const double u0 = 4*Xn/(Xn + 15*Yn + 3*Zn);
+    const double v0 = 9*Yn/(Xn + 15*Yn + 3*Zn);
+    const double Y = L > ki*eps ? pow(((L + 16) / 116.0), 3.0) : L / ki;
+
+    const double a = L > 0 ? 1.0/3.0*(52*L/(luv.U + 13*L*u0)-1) : 0;
+    const double b = -5*Y;
+    const double c = -1.0/3.0;
+    const double d = luv.V + 13*L*v0 > 0 ? Y*(39*L/(luv.V + 13*L*v0)-5) : 0;
+
+    const double X = (d - b) / (a - c);
+    const double Z = X*a + b;
+
+    return XYZ(X, Y, Z);
+}
+
 LCH luvToLCH(LUV luv) {
     double H;
     if (atan2(luv.V, luv.U) >= 0)
@@ -84,6 +138,12 @@ LCH luvToLCH(LUV luv) {
     else
         H = atan2(luv.V, luv.U)*180.0/PI + 360;
     return LCH(luv.L, sqrt(luv.U*luv.U + luv.V*luv.V), H);
+}
+
+LUV lchToLUV(LCH lch) {
+    const double C = lch.C;
+    const double H = lch.H;
+    return LUV(lch.L, C * cos(H * PI / 180), C * sin(H * PI / 180));
 }
 
 RGB MSC(double hue)
@@ -171,8 +231,10 @@ struct BezierLCH {
     }
 };
 
-void generatePalette(int numColors, double hue)
+LCH[] generatePalette(int numColors, double hue)
 {
+    LCH[] generated = new LCH[numColors];
+
     const int N = numColors;
     const LCH p0 = LCH(0.0, 0.0, hue);
     const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(MSC(hue), 2.2)));
@@ -186,27 +248,47 @@ void generatePalette(int numColors, double hue)
     auto B0 = BezierLCH(p0, q0, q1);
     auto B1 = BezierLCH(q1, q2, p2);
 
-    for (double t = 0.0; t < 1.0; t += 0.1) {
+    double t = 0.0;
+    for (int i = 0; i < numColors; ++i) {
         LCH val;
         if (t <= 0.5)
             val = B0(2*t);
         else
-            val = B1(t-0.5);
-        writeln(val.L, ' ', val.C, ' ', val.H);
+            val = B1(2*(t-0.5));
+        generated[i] = val;
+        writeln("t ", t);
+        t += (1.0 / (numColors - 1));
     }
+
+    return generated;
 }
 
-void updateLabelMSC(Label labelMSC, Scale scale)
+void updateHue(Scale scale, ref double hue)
 {
-    const auto msc = MSC(scale.getValue());
-    labelMSC.overrideBackgroundColor(GtkStateFlags.NORMAL, new RGBA(msc.r, msc.g, msc.b));
+    hue = scale.getValue();
+    //const auto msc = MSC(scale.getValue());
+    //labelMSC.overrideBackgroundColor(GtkStateFlags.NORMAL, new RGBA(msc.r, msc.g, msc.b));
+}
+
+void onClickedGenerate(ref Box boxPalette, double hue)
+{
+    writeln("Generate with hue ", hue);
+    LCH[] colors = generatePalette(8, hue);
+    boxPalette.removeAll();
+    foreach (lch; colors) {
+        writeln("LCH ", lch.L, ' ', lch.C, ' ', lch.H);
+        RGB rgb = lch.lchToLUV().luvToXYZ().xyzToRGB(2.2);
+        Label label = new Label("");
+        label.overrideBackgroundColor(GtkStateFlags.NORMAL, new RGBA(rgb.r, rgb.g, rgb.b));
+        boxPalette.add(label);
+        writeln("RGB ", rgb.r, ' ', rgb.g, ' ', rgb.b);
+    }
+    boxPalette.showAll();
 }
 
 void main(string[] args)
 {
-    RGB color = MSC(280);
-    generatePalette(5, 280);
-    writeln("R ", color.r, " G ", color.g, " B ", color.b);
+    double hue = 0;
     Main.init(args);
     Builder builder = new Builder();
     builder.addFromFile("design.glade");
@@ -214,11 +296,21 @@ void main(string[] args)
     w.addOnHide( delegate void(Widget){ Main.quit(); } );
     w.showAll();
 
+    Box boxMain = cast(Box)builder.getObject("box-main");
+    Box boxPalette = new Box(Orientation.VERTICAL, 4);
+    boxMain.add(boxPalette);
+    boxMain.showAll();
+
     Scale scaleHue = cast(Scale)builder.getObject("scale-hue");
-    Label labelMSC = cast(Label)builder.getObject("label-msc");
+    //Label labelMSC = cast(Label)builder.getObject("label-msc");
     scaleHue.addOnValueChanged(delegate void(Range range) {
-        updateLabelMSC(labelMSC, cast(Scale)(range));
+        updateHue(cast(Scale)(range), hue);
+        onClickedGenerate(boxPalette, hue);
     });
+    //Button buttonGenerate = cast(Button)builder.getObject("button-generate");
+    //buttonGenerate.addOnClicked(delegate void(Button _) {
+    //    onClickedGenerate(boxPalette, hue);
+    //});
 
     Main.run();
 }
