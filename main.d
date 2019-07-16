@@ -148,10 +148,10 @@ LUV lchToLUV(LCH lch) {
 
 RGB MSC(double hue)
 {
-    double[][] M = [
-        [0.5767309, 0.2973769, 0.0270343],
-        [0.1855540, 0.6273491, 0.0706872],
-        [0.1881852, 0.0752741, 0.9911085]
+    const double[][] M = [
+        [0.4124564, 0.3575761, 0.1804375],
+        [0.2126729, 0.7151522, 0.0721750],
+        [0.0193339, 0.1191920, 0.9503041]
     ];
     const double Xn = 0.95047;
     const double Yn = 1.0;
@@ -163,6 +163,12 @@ RGB MSC(double hue)
     const double hCyan = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 1.0, 1.0), 2.2))).H;
     const double hBlue = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 0.0, 1.0), 2.2))).H;
     const double hMagenta = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 0.0, 1.0), 2.2))).H;
+    writeln("hRed ", hRed);
+    writeln("hYellow ", hYellow);
+    writeln("hGreen ", hGreen);
+    writeln("hCyan ", hCyan);
+    writeln("hBlue ", hBlue);
+    writeln("hMagenta ", hMagenta);
     if (hue >= hRed && hue <= hYellow) {
         ro = 1;
         sigma = 2;
@@ -194,13 +200,13 @@ RGB MSC(double hue)
         theta = 0;
     }
 
-    const double u = 4*Xn/(Xn+15*Yn+3*Zn);
-    const double v = 9*Yn/(Xn+15*Yn+3*Zn);
+    const double Un = 4*Xn/(Xn+15*Yn+3*Zn);
+    const double Vn = 9*Yn/(Xn+15*Yn+3*Zn);
     const double gamma = 2.2;
     const double alpha = -sin(hue * PI / 180);
     const double beta = cos(hue * PI / 180);
-    const double a = (alpha*u+beta*v)*(M[theta][0] + 15*M[theta][1] + 3*M[theta][2])-(4*alpha*M[theta][0]+9*beta*M[theta][1]);
-    const double b = (alpha*u+beta*v)*(M[ro][0] + 15*M[ro][1] + 3*M[ro][2])-(4*alpha*M[ro][0]+9*beta*M[ro][1]);
+    const double a = (alpha*Un+beta*Vn)*(M[0][theta] + 15*M[1][theta] + 3*M[2][theta])-(4*alpha*M[0][theta]+9*beta*M[1][theta]);
+    const double b = (alpha*Un+beta*Vn)*(M[0][ro] + 15*M[1][ro] + 3*M[2][ro])-(4*alpha*M[0][ro]+9*beta*M[1][ro]);
     const double roValue = pow(-a/b, 1.0/gamma);
 
     auto color = RGB(0, 0, 0);
@@ -237,8 +243,11 @@ LCH[] generatePalette(int numColors, double hue)
 
     const int N = numColors;
     const LCH p0 = LCH(0.0, 0.0, hue);
-    const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(MSC(hue), 2.2)));
+    const RGB msc = MSC(hue);
+    const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, 2.2)));
     const LCH p2 = LCH(100.0, 0.0, hue);
+    writeln("MSC(RGB) ", msc.r, ' ', msc.g, ' ', msc.b);
+    writeln("MSC(LCH) ", p1.L, ' ', p1.C, ' ', p1.H);
     const double s = 0.6;
     const double b = 0.75;
     const double c = 0.88 < 0.34 + 0.06*N ? 0.88 : 0.06*N;
@@ -272,6 +281,7 @@ void updateHue(Scale scale, ref double hue)
 
 void onClickedGenerate(ref Box boxPalette, double hue)
 {
+    hue = hue % 360;
     writeln("Generate with hue ", hue);
     LCH[] colors = generatePalette(8, hue);
     boxPalette.removeAll();
