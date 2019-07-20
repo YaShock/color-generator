@@ -8,9 +8,14 @@ import gtk.Range;
 import gtk.Label;
 import gtk.Button;
 import gtk.Box;
+import gtk.SpinButton;
 import gdk.RGBA;
+import gobject.Signals;
+
 import std.stdio;
 import std.math;
+import std.conv;
+import std.string;
 
 struct RGB {
     double r, g, b;
@@ -237,7 +242,11 @@ struct BezierLCH {
     }
 };
 
-LCH[] generatePalette(int numColors, double hue)
+double distance(LCH c1, LCH c2) {
+    return abs(log((125 - c2.L) / (125 - c1.L)));
+}
+
+LCH[] generatePalette(int numColors, double hue, double s, double b, double c)
 {
     LCH[] generated = new LCH[numColors];
 
@@ -246,44 +255,74 @@ LCH[] generatePalette(int numColors, double hue)
     const RGB msc = MSC(hue);
     const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, 2.2)));
     const LCH p2 = LCH(100.0, 0.0, hue);
-    writeln("MSC(RGB) ", msc.r, ' ', msc.g, ' ', msc.b);
-    writeln("MSC(LCH) ", p1.L, ' ', p1.C, ' ', p1.H);
-    const double s = 0.6;
-    const double b = 0.75;
-    const double c = 0.88 < 0.34 + 0.06*N ? 0.88 : 0.06*N;
+    //writeln("MSC(RGB) ", msc.r, ' ', msc.g, ' ', msc.b);
+    //writeln("MSC(LCH) ", p1.L, ' ', p1.C, ' ', p1.H);
     const LCH q0 = (1 - s)*p0 + s*p1;
     const LCH q2 = (1 - s)*p2 + s*p1;
     const LCH q1 = 1.0/2.0*(q0 + q2);
     auto B0 = BezierLCH(p0, q0, q1);
     auto B1 = BezierLCH(q1, q2, p2);
+    const int K = N - 1;
 
-    double t = 0.0;
-    for (int i = 0; i < numColors; ++i) {
-        LCH val;
+    LCH cSeq(double t) {
         if (t <= 0.5)
-            val = B0(2*t);
+            return B0(2*t);
         else
-            val = B1(2*(t-0.5));
-        generated[i] = val;
-        writeln("t ", t);
-        t += (1.0 / (numColors - 1));
+            return B1(2*(t-0.5));
+    }
+
+    LCH pSeq(double t) {
+        return cSeq((1 - c) * b + t * c);
+    }
+
+    double w(double x) {
+        if (x >= -1  && x < 0)
+            return 1 + x;
+        if (x >= 0 && x <= 1)
+            return 1 - x;
+        return 0;
+    }
+
+    double S(int i) {
+        double sti = 0;
+        for (int j = 0; j < i; ++j) {
+            sti += distance(cSeq(cast(double)j / K), cSeq(cast(double)(j + 1) / K));
+        }
+        return sti;
+    }
+
+    double T(double t) {
+        double res = 0;
+        for (int i = 0; i <= N; ++i) {
+            const double si = S(i) / S(K);
+            res += w(K*t-i)*si;
+        }
+        return res;
+    }
+
+    double temp = 0;
+    for (int i = 0; i <= K; ++i) {
+        //const double ti = cast(double)i / K;
+        //const double si = S(i) / S(K);
+        //const double t = T(ti);
+
+        //writeln("ti ", ti);
+        //writeln("si ", si);
+        //writeln("t ", t);
+        //generated[i] = cSeq(t);
+
+        generated[i] = pSeq(temp);
+        temp += 1.0 / K;
     }
 
     return generated;
 }
 
-void updateHue(Scale scale, ref double hue)
-{
-    hue = scale.getValue();
-    //const auto msc = MSC(scale.getValue());
-    //labelMSC.overrideBackgroundColor(GtkStateFlags.NORMAL, new RGBA(msc.r, msc.g, msc.b));
-}
-
-void onClickedGenerate(ref Box boxPalette, double hue)
+void onClickedGenerate(ref Box boxPalette, int numColors, double hue, double s, double b, double c)
 {
     hue = hue % 360;
     writeln("Generate with hue ", hue);
-    LCH[] colors = generatePalette(8, hue);
+    LCH[] colors = generatePalette(numColors, hue, s, b, c);
     boxPalette.removeAll();
     foreach (lch; colors) {
         writeln("LCH ", lch.L, ' ', lch.C, ' ', lch.H);
@@ -298,7 +337,12 @@ void onClickedGenerate(ref Box boxPalette, double hue)
 
 void main(string[] args)
 {
+    int numColors = 8;
     double hue = 0;
+    double s = 0.6;
+    double b = 0.75;
+    double c = 0.88 < 0.34 + 0.06*numColors ? 0.88 : 0.06*numColors;
+
     Main.init(args);
     Builder builder = new Builder();
     builder.addFromFile("design.glade");
@@ -312,15 +356,46 @@ void main(string[] args)
     boxMain.showAll();
 
     Scale scaleHue = cast(Scale)builder.getObject("scale-hue");
-    //Label labelMSC = cast(Label)builder.getObject("label-msc");
+    Scale scaleSaturation = cast(Scale)builder.getObject("scale-saturation");
+    Scale scaleContrast = cast(Scale)builder.getObject("scale-contrast");
+    Scale scaleBrightness = cast(Scale)builder.getObject("scale-brightness");
+
     scaleHue.addOnValueChanged(delegate void(Range range) {
-        updateHue(cast(Scale)(range), hue);
-        onClickedGenerate(boxPalette, hue);
+        hue = range.getValue();
+        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
     });
-    //Button buttonGenerate = cast(Button)builder.getObject("button-generate");
-    //buttonGenerate.addOnClicked(delegate void(Button _) {
-    //    onClickedGenerate(boxPalette, hue);
-    //});
+
+    scaleContrast.addOnValueChanged(delegate void(Range range) {
+        c = range.getValue();
+        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
+    });
+
+    scaleBrightness.addOnValueChanged(delegate void(Range range) {
+        b = range.getValue();
+        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
+    });
+
+    scaleSaturation.addOnValueChanged(delegate void(Range range) {
+        s = range.getValue();
+        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
+    });
+
+    scaleSaturation.setValue(s);
+    scaleContrast.setValue(c);
+    scaleBrightness.setValue(b);
+
+    SpinButton spinNumColors = cast(SpinButton)builder.getObject("spin-num-colors");
+    spinNumColors.setValue(numColors);
+    spinNumColors.addOnValueChanged(delegate void(SpinButton button) {
+        numColors = to!int(button.getValue());
+        s = 0.6;
+        scaleSaturation.setValue(s);
+        b = 0.75;
+        scaleBrightness.setValue(b);
+        c = 0.88 < 0.34 + 0.06*numColors ? 0.88 : 0.06*numColors;
+        scaleContrast.setValue(c);
+        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
+    });
 
     Main.run();
 }

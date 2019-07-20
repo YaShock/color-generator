@@ -22,6 +22,12 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="adjustmentNumColors">
+    <property name="upper">20</property>
+    <property name="value">5</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="adjustmentSaturation">
     <property name="upper">1</property>
     <property name="step_increment">0.01</property>
@@ -76,16 +82,14 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry">
+                  <object class="GtkSpinButton" id="spin-num-colors">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="max_width_chars">2</property>
-                    <property name="input_purpose">digits</property>
+                    <property name="adjustment">adjustmentNumColors</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="padding">2</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
@@ -217,12 +221,12 @@
                         <property name="spacing">4</property>
                         <property name="homogeneous">True</property>
                         <child>
-                          <object class="GtkScale">
+                          <object class="GtkScale" id="scale-contrast">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="adjustment">adjustmentContrast</property>
                             <property name="round_digits">1</property>
-                            <property name="digits">0</property>
+                            <property name="digits">2</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -231,7 +235,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkScale">
+                          <object class="GtkScale" id="scale-saturation">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="adjustment">adjustmentSaturation</property>
@@ -245,7 +249,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkScale">
+                          <object class="GtkScale" id="scale-brightness">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="adjustment">adjustmentBrightness</property>
