@@ -32,7 +32,7 @@ struct RGB {
     RGB opMul(double s) const {
         return RGB(s*r, s*g, s*b);
     }
-};
+}
 
 struct XYZ {
     double X, Y, Z;
@@ -46,11 +46,11 @@ struct XYZ {
             return Z;
         throw new Exception("Invalid index");
     }
-};
+}
 
 struct LUV {
     double L, U, V;
-};
+}
 
 struct LCH {
     double L, C, H;
@@ -62,7 +62,7 @@ struct LCH {
     LCH opAdd(LCH rhs) const {
         return LCH(L + rhs.L, C + rhs.C, H + rhs.H);
     }
-};
+}
 
 XYZ rgbToXYZ(RGB rgb, double gamma) {
     double[][] M = [
@@ -227,9 +227,7 @@ LCH lchBezier(LCH b0, LCH b1, LCH b2, double t)
 }
 
 struct BezierLCH {
-    LCH b0;
-    LCH b1;
-    LCH b2;
+    LCH b0, b1, b2;
 
     this(LCH b0, LCH b1, LCH b2) {
         this.b0 = b0;
@@ -240,7 +238,7 @@ struct BezierLCH {
     LCH opCall(double t) const {
         return (t - 1)*(t - 1)*b0 + 2*(1 - t)*t*b1 + t*t*b2;
     }
-};
+}
 
 double distance(LCH c1, LCH c2) {
     return abs(log((125 - c2.L) / (125 - c1.L)));
