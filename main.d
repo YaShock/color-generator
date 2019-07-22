@@ -260,7 +260,7 @@ LCH[] generatePalette(int numColors, double hue, double s, double b, double c)
     const LCH q1 = 1.0/2.0*(q0 + q2);
     auto B0 = BezierLCH(p0, q0, q1);
     auto B1 = BezierLCH(q1, q2, p2);
-    const int K = N - 1;
+    const int K = 100;
 
     LCH cSeq(double t) {
         if (t <= 0.5)
@@ -289,28 +289,23 @@ LCH[] generatePalette(int numColors, double hue, double s, double b, double c)
         return sti;
     }
 
-    double T(double t) {
-        double res = 0;
-        for (int i = 0; i <= N; ++i) {
-            const double si = S(i) / S(K);
-            res += w(K*t-i)*si;
+    double T(double st) {
+        for (int i = 0; i < K; ++i) {
+            const double sti = S(i) / S(K);
+            const double stj = S(i + 1) / S(K);
+            if (st >= sti && st <= stj) {
+                const double ti = cast(double)i / K;
+                const double tj = cast(double)(i + 1) / K;
+                const double x = (st - sti) / (stj - sti);
+                return x * (tj - ti) + ti;
+            }
         }
-        return res;
+        return 0;
     }
 
-    double temp = 0;
-    for (int i = 0; i <= K; ++i) {
-        //const double ti = cast(double)i / K;
-        //const double si = S(i) / S(K);
-        //const double t = T(ti);
-
-        //writeln("ti ", ti);
-        //writeln("si ", si);
-        //writeln("t ", t);
-        //generated[i] = cSeq(t);
-
-        generated[i] = pSeq(temp);
-        temp += 1.0 / K;
+    for (int i = 0; i < N; ++i) {
+        const double ti = cast(double)i / (N - 1);
+        generated[i] = pSeq(T(ti));
     }
 
     return generated;
@@ -378,6 +373,7 @@ void main(string[] args)
         onClickedGenerate(boxPalette, numColors, hue, s, b, c);
     });
 
+    scaleHue.setValue(hue);
     scaleSaturation.setValue(s);
     scaleContrast.setValue(c);
     scaleBrightness.setValue(b);
