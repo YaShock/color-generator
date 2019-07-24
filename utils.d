@@ -1,21 +1,5 @@
-pragma(lib, "gtkd-3");
-
-import gtk.Builder;
-import gtk.Main;
-import gtk.Window;
-import gtk.Scale;
-import gtk.Range;
-import gtk.Label;
-import gtk.Button;
-import gtk.Box;
-import gtk.SpinButton;
-import gdk.RGBA;
-import gobject.Signals;
-
-import std.stdio;
 import std.math;
-import std.conv;
-import std.string;
+import std.stdio;
 
 struct RGB {
     double r, g, b;
@@ -66,9 +50,9 @@ struct LCH {
 
 XYZ rgbToXYZ(RGB rgb, double gamma) {
     double[][] M = [
-        [0.4124564, 0.3575761, 0.1804375],
-        [0.2126729, 0.7151522, 0.0721750],
-        [0.0193339, 0.1191920, 0.9503041]
+        [0.5767309, 0.1855540, 0.1881852],
+        [0.2973769, 0.6273491, 0.0752741],
+        [0.0270343, 0.0706872, 0.9911085]
     ];
     double[] xyz = [0, 0, 0];
     for (int i = 0; i < 3; ++i) {
@@ -81,9 +65,9 @@ XYZ rgbToXYZ(RGB rgb, double gamma) {
 
 RGB xyzToRGB(XYZ xyz, double gamma) {
     double[][] Minv = [
-        [3.2404542, -1.5371385, -0.4985314],
+        [2.0413690, -0.5649464, -0.3446944],
         [-0.9692660, 1.8760108, 0.0415560],
-        [0.0556434, -0.2040259, 1.0572252]
+        [0.0134474, -0.1183897, 1.0154096]
     ];
     double[] rgb = [0, 0, 0];
     for (int i = 0; i < 3; ++i) {
@@ -153,10 +137,10 @@ LUV lchToLUV(LCH lch) {
 
 RGB MSC(double hue)
 {
-    const double[][] M = [
-        [0.4124564, 0.3575761, 0.1804375],
-        [0.2126729, 0.7151522, 0.0721750],
-        [0.0193339, 0.1191920, 0.9503041]
+    double[][] M = [
+        [0.5767309, 0.1855540, 0.1881852],
+        [0.2973769, 0.6273491, 0.0752741],
+        [0.0270343, 0.0706872, 0.9911085]
     ];
     const double Xn = 0.95047;
     const double Yn = 1.0;
@@ -309,87 +293,4 @@ LCH[] generatePalette(int numColors, double hue, double s, double b, double c)
     }
 
     return generated;
-}
-
-void onClickedGenerate(ref Box boxPalette, int numColors, double hue, double s, double b, double c)
-{
-    hue = hue % 360;
-    writeln("Generate with hue ", hue);
-    LCH[] colors = generatePalette(numColors, hue, s, b, c);
-    boxPalette.removeAll();
-    foreach (lch; colors) {
-        writeln("LCH ", lch.L, ' ', lch.C, ' ', lch.H);
-        RGB rgb = lch.lchToLUV().luvToXYZ().xyzToRGB(2.2);
-        Label label = new Label("");
-        label.overrideBackgroundColor(GtkStateFlags.NORMAL, new RGBA(rgb.r, rgb.g, rgb.b));
-        boxPalette.add(label);
-        writeln("RGB ", rgb.r, ' ', rgb.g, ' ', rgb.b);
-    }
-    boxPalette.showAll();
-}
-
-void main(string[] args)
-{
-    int numColors = 8;
-    double hue = 0;
-    double s = 0.6;
-    double b = 0.75;
-    double c = 0.88 < 0.34 + 0.06*numColors ? 0.88 : 0.06*numColors;
-
-    Main.init(args);
-    Builder builder = new Builder();
-    builder.addFromFile("design.glade");
-    Window w = cast(Window)builder.getObject("main-window");
-    w.addOnHide( delegate void(Widget){ Main.quit(); } );
-    w.showAll();
-
-    Box boxMain = cast(Box)builder.getObject("box-main");
-    Box boxPalette = new Box(Orientation.VERTICAL, 4);
-    boxMain.add(boxPalette);
-    boxMain.showAll();
-
-    Scale scaleHue = cast(Scale)builder.getObject("scale-hue");
-    Scale scaleSaturation = cast(Scale)builder.getObject("scale-saturation");
-    Scale scaleContrast = cast(Scale)builder.getObject("scale-contrast");
-    Scale scaleBrightness = cast(Scale)builder.getObject("scale-brightness");
-
-    scaleHue.addOnValueChanged(delegate void(Range range) {
-        hue = range.getValue();
-        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
-    });
-
-    scaleContrast.addOnValueChanged(delegate void(Range range) {
-        c = range.getValue();
-        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
-    });
-
-    scaleBrightness.addOnValueChanged(delegate void(Range range) {
-        b = range.getValue();
-        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
-    });
-
-    scaleSaturation.addOnValueChanged(delegate void(Range range) {
-        s = range.getValue();
-        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
-    });
-
-    scaleHue.setValue(hue);
-    scaleSaturation.setValue(s);
-    scaleContrast.setValue(c);
-    scaleBrightness.setValue(b);
-
-    SpinButton spinNumColors = cast(SpinButton)builder.getObject("spin-num-colors");
-    spinNumColors.setValue(numColors);
-    spinNumColors.addOnValueChanged(delegate void(SpinButton button) {
-        numColors = to!int(button.getValue());
-        s = 0.6;
-        scaleSaturation.setValue(s);
-        b = 0.75;
-        scaleBrightness.setValue(b);
-        c = 0.88 < 0.34 + 0.06*numColors ? 0.88 : 0.06*numColors;
-        scaleContrast.setValue(c);
-        onClickedGenerate(boxPalette, numColors, hue, s, b, c);
-    });
-
-    Main.run();
 }
