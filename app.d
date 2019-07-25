@@ -11,12 +11,27 @@ import gtk.Label;
 import gtk.Button;
 import gtk.Box;
 import gtk.SpinButton;
+import gtk.DrawingArea;
+import gdk.GLContext;
 import gdk.RGBA;
 import gobject.Signals;
 
 import std.stdio;
 import std.conv;
 import std.string;
+
+class PaletteWidget : DrawingArea
+{
+    this()
+    {
+        this.setSizeRequest(100, 50);
+        this.addOnDraw();
+    }
+
+    bool onDraw(Scoped!GLContext context, Widget widget)
+    {
+    }
+}
 
 void onClickedGenerate(ref Box boxPalette, int numColors, double hue, double s, double b, double c)
 {
@@ -35,13 +50,19 @@ void onClickedGenerate(ref Box boxPalette, int numColors, double hue, double s, 
     boxPalette.showAll();
 }
 
+void setDefaultParams(int numColors, ref double hue, ref double s, ref double b, ref double c)
+{
+    hue = 0;
+    s = 0.6;
+    b = 0.75;
+    c = 0.88 < 0.34 + 0.06 * numColors ? 0.88 : 0.06 * numColors;
+}
+
 void main(string[] args)
 {
     int numColors = 8;
-    double hue = 0;
-    double s = 0.6;
-    double b = 0.75;
-    double c = 0.88 < 0.34 + 0.06*numColors ? 0.88 : 0.06*numColors;
+    double hue, s, b, c;
+    setDefaultParams(numColors, hue, s, b, c);
 
     Main.init(args);
     Builder builder = new Builder();
@@ -51,6 +72,10 @@ void main(string[] args)
     w.showAll();
 
     Box boxMain = cast(Box)builder.getObject("box-main");
+
+    PaletteWidget paletteWidget = new PaletteWidget();
+    boxMain.add(paletteWidget);
+
     Box boxPalette = new Box(Orientation.VERTICAL, 4);
     boxMain.add(boxPalette);
     boxMain.showAll();
@@ -89,11 +114,7 @@ void main(string[] args)
     spinNumColors.setValue(numColors);
     spinNumColors.addOnValueChanged(delegate void(SpinButton button) {
         numColors = to!int(button.getValue());
-        s = 0.6;
-        scaleSaturation.setValue(s);
-        b = 0.75;
-        scaleBrightness.setValue(b);
-        c = 0.88 < 0.34 + 0.06*numColors ? 0.88 : 0.06*numColors;
+        c = 0.88 < 0.34 + 0.06 * numColors ? 0.88 : 0.06 * numColors;
         scaleContrast.setValue(c);
         onClickedGenerate(boxPalette, numColors, hue, s, b, c);
     });
