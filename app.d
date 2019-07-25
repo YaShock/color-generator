@@ -25,11 +25,6 @@ class PaletteWidget : DrawingArea
     this()
     {
         this.setSizeRequest(100, 50);
-        this.addOnDraw();
-    }
-
-    bool onDraw(Scoped!GLContext context, Widget widget)
-    {
     }
 }
 
