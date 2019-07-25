@@ -12,9 +12,12 @@ import gtk.Button;
 import gtk.Box;
 import gtk.SpinButton;
 import gtk.DrawingArea;
+import gtk.Widget;
 import gdk.GLContext;
 import gdk.RGBA;
 import gobject.Signals;
+import cairo.Context;
+import cairo.ImageSurface;
 
 import std.stdio;
 import std.conv;
@@ -22,9 +25,42 @@ import std.string;
 
 class PaletteWidget : DrawingArea
 {
+    ImageSurface surface;
+    CairoOperator operator = CairoOperator.OVER;
+    int width;
+    int height;
+
     this()
     {
-        this.setSizeRequest(100, 50);
+        setSizeRequest(100, 50);
+        addOnDraw(&OnDraw);
+        addOnSizeAllocate(&onSizeAllocate);
+    }
+
+    void onSizeAllocate(GtkAllocation* allocation, Widget widget)
+    {
+        width = allocation.width;
+        height = allocation.height;
+
+        surface = ImageSurface.create(CairoFormat.ARGB32, width, height);
+        drawSomething();
+    }
+
+
+    public bool OnDraw(Scoped!Context context, Widget widget)
+    {
+        context.setSourceSurface(surface, 0, 0);
+        context.paint();
+        return true;
+    }
+
+    public void drawSomething()
+    {
+        Context context = Context.create(surface);
+        context.setOperator(operator);
+        context.rectangle(5, 5, 3, 3);
+        context.fill();
+        this.queueDraw();
     }
 }
 
@@ -69,6 +105,7 @@ void main(string[] args)
     Box boxMain = cast(Box)builder.getObject("box-main");
 
     PaletteWidget paletteWidget = new PaletteWidget();
+    paletteWidget.drawSomething();
     boxMain.add(paletteWidget);
 
     Box boxPalette = new Box(Orientation.VERTICAL, 4);
