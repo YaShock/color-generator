@@ -152,12 +152,6 @@ RGB MSC(double hue)
     const double hCyan = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 1.0, 1.0), 2.2))).H;
     const double hBlue = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 0.0, 1.0), 2.2))).H;
     const double hMagenta = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 0.0, 1.0), 2.2))).H;
-    writeln("hRed ", hRed);
-    writeln("hYellow ", hYellow);
-    writeln("hGreen ", hGreen);
-    writeln("hCyan ", hCyan);
-    writeln("hBlue ", hBlue);
-    writeln("hMagenta ", hMagenta);
     if (hue >= hRed && hue <= hYellow) {
         ro = 1;
         sigma = 2;
@@ -228,36 +222,36 @@ double distance(LCH c1, LCH c2) {
     return abs(log((125 - c2.L) / (125 - c1.L)));
 }
 
-LCH[] generatePalette(int numColors, double hue, double s, double b, double c)
-{
-    LCH[] generated = new LCH[numColors];
+class Palette {
+    this(BezierLCH B0, BezierLCH B1, double b, double c)
+    {
+        this.B0 = B0;
+        this.B1 = B1;
+        this.b = b;
+        this.c = c;
+    }
 
-    const int N = numColors;
-    const LCH p0 = LCH(0.0, 0.0, hue);
-    const RGB msc = MSC(hue);
-    const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, 2.2)));
-    const LCH p2 = LCH(100.0, 0.0, hue);
-    //writeln("MSC(RGB) ", msc.r, ' ', msc.g, ' ', msc.b);
-    //writeln("MSC(LCH) ", p1.L, ' ', p1.C, ' ', p1.H);
-    const LCH q0 = (1 - s)*p0 + s*p1;
-    const LCH q2 = (1 - s)*p2 + s*p1;
-    const LCH q1 = 1.0/2.0*(q0 + q2);
-    auto B0 = BezierLCH(p0, q0, q1);
-    auto B1 = BezierLCH(q1, q2, p2);
+    LCH opCall(double t) const {
+        return pSeq(T(t));
+    }
+
+private:
+    BezierLCH B0, B1;
+    double b, c;
     const int K = 100;
 
-    LCH cSeq(double t) {
+    LCH cSeq(double t) const {
         if (t <= 0.5)
             return B0(2*t);
         else
             return B1(2*(t-0.5));
     }
 
-    LCH pSeq(double t) {
+    LCH pSeq(double t) const {
         return cSeq((1 - c) * b + t * c);
     }
 
-    double w(double x) {
+    double w(double x) const {
         if (x >= -1  && x < 0)
             return 1 + x;
         if (x >= 0 && x <= 1)
@@ -265,7 +259,7 @@ LCH[] generatePalette(int numColors, double hue, double s, double b, double c)
         return 0;
     }
 
-    double S(int i) {
+    double S(int i) const {
         double sti = 0;
         for (int j = 0; j < i; ++j) {
             sti += distance(cSeq(cast(double)j / K), cSeq(cast(double)(j + 1) / K));
@@ -273,7 +267,7 @@ LCH[] generatePalette(int numColors, double hue, double s, double b, double c)
         return sti;
     }
 
-    double T(double st) {
+    double T(double st) const {
         for (int i = 0; i < K; ++i) {
             const double sti = S(i) / S(K);
             const double stj = S(i + 1) / S(K);
@@ -286,10 +280,31 @@ LCH[] generatePalette(int numColors, double hue, double s, double b, double c)
         }
         return 0;
     }
+}
+
+Palette generatePalette(double hue, double s, double b, double c)
+{
+    const LCH p0 = LCH(0.0, 0.0, hue);
+    const RGB msc = MSC(hue);
+    const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, 2.2)));
+    const LCH p2 = LCH(100.0, 0.0, hue);
+    const LCH q0 = (1 - s)*p0 + s*p1;
+    const LCH q2 = (1 - s)*p2 + s*p1;
+    const LCH q1 = 1.0/2.0*(q0 + q2);
+    auto B0 = BezierLCH(p0, q0, q1);
+    auto B1 = BezierLCH(q1, q2, p2);
+
+    return new Palette(B0, B1, b, c);
+}
+
+LCH[] generateColors(Palette palette, int numColors)
+{
+    const int N = numColors;
+    LCH[] generated = new LCH[numColors];
 
     for (int i = 0; i < N; ++i) {
         const double ti = cast(double)i / (N - 1);
-        generated[i] = pSeq(T(ti));
+        generated[i] = palette(ti);
     }
 
     return generated;
