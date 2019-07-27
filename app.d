@@ -15,6 +15,7 @@ import gtk.DrawingArea;
 import gtk.Widget;
 import gdk.GLContext;
 import gdk.RGBA;
+import gdk.Pixbuf;
 import gobject.Signals;
 import cairo.Context;
 import cairo.ImageSurface;
@@ -22,18 +23,22 @@ import cairo.ImageSurface;
 import std.stdio;
 import std.conv;
 import std.string;
+import std.algorithm;
 
 class PaletteWidget : DrawingArea
 {
+    Palette* palette;
     ImageSurface surface;
+    Pixbuf pixbuf;
     CairoOperator operator = CairoOperator.OVER;
     int width;
     int height;
 
-    this()
+    this(Palette* palette)
     {
+        this.palette = palette;
         setSizeRequest(100, 50);
-        addOnDraw(&OnDraw);
+        addOnDraw(&onDraw);
         addOnSizeAllocate(&onSizeAllocate);
     }
 
@@ -41,30 +46,44 @@ class PaletteWidget : DrawingArea
     {
         width = allocation.width;
         height = allocation.height;
-
         surface = ImageSurface.create(CairoFormat.ARGB32, width, height);
-        drawSomething();
+        drawPalette();
     }
 
-
-    public bool OnDraw(Scoped!Context context, Widget widget)
+    public bool onDraw(Scoped!Context context, Widget widget)
     {
         context.setSourceSurface(surface, 0, 0);
         context.paint();
         return true;
     }
 
-    public void drawSomething()
+    public void drawPalette()
     {
         Context context = Context.create(surface);
+        context.save();
         context.setOperator(operator);
-        context.rectangle(5, 5, 3, 3);
-        context.fill();
+        for (int x = 0; x < width; ++x) {
+            double t = cast(double)x / width;
+            RGB rgb = (*palette)(t).lchToLUV().luvToXYZ().xyzToRGB(2.2);
+            context.setSourceRgb(rgb.r, rgb.g, rgb.b);
+            context.moveTo(x, 0);
+            context.lineTo(x, height);
+            context.stroke();
+        }
+        context.restore();
         this.queueDraw();
     }
 }
 
-void onClickedGenerate(ref Box boxPalette, ref Palette palette, int numColors, double hue, double s, double b, double c)
+void onClickedGenerate(
+    ref PaletteWidget paletteWidget,
+    ref Box boxPalette,
+    ref Palette palette,
+    int numColors,
+    double hue,
+    double s,
+    double b,
+    double c)
 {
     hue = hue % 360;
     palette = generatePalette(hue, s, b, c);
@@ -76,6 +95,7 @@ void onClickedGenerate(ref Box boxPalette, ref Palette palette, int numColors, d
         label.overrideBackgroundColor(GtkStateFlags.NORMAL, new RGBA(rgb.r, rgb.g, rgb.b));
         boxPalette.add(label);
     }
+    paletteWidget.drawPalette();
     boxPalette.showAll();
 }
 
@@ -103,9 +123,9 @@ void main(string[] args)
 
     Box boxMain = cast(Box)builder.getObject("box-main");
 
-    PaletteWidget paletteWidget = new PaletteWidget();
-    paletteWidget.drawSomething();
-    boxMain.add(paletteWidget);
+    PaletteWidget paletteWidget = new PaletteWidget(&palette);
+    paletteWidget.drawPalette();
+    boxMain.packStart(paletteWidget, true, true, 5);
 
     Box boxPalette = new Box(Orientation.VERTICAL, 4);
     boxMain.add(boxPalette);
@@ -118,22 +138,22 @@ void main(string[] args)
 
     scaleHue.addOnValueChanged(delegate void(Range range) {
         hue = range.getValue();
-        onClickedGenerate(boxPalette, palette, numColors, hue, s, b, c);
+        onClickedGenerate(paletteWidget, boxPalette, palette, numColors, hue, s, b, c);
     });
 
     scaleContrast.addOnValueChanged(delegate void(Range range) {
         c = range.getValue();
-        onClickedGenerate(boxPalette, palette, numColors, hue, s, b, c);
+        onClickedGenerate(paletteWidget, boxPalette, palette, numColors, hue, s, b, c);
     });
 
     scaleBrightness.addOnValueChanged(delegate void(Range range) {
         b = range.getValue();
-        onClickedGenerate(boxPalette, palette, numColors, hue, s, b, c);
+        onClickedGenerate(paletteWidget, boxPalette, palette, numColors, hue, s, b, c);
     });
 
     scaleSaturation.addOnValueChanged(delegate void(Range range) {
         s = range.getValue();
-        onClickedGenerate(boxPalette, palette, numColors, hue, s, b, c);
+        onClickedGenerate(paletteWidget, boxPalette, palette, numColors, hue, s, b, c);
     });
 
     scaleHue.setValue(hue);
@@ -147,7 +167,7 @@ void main(string[] args)
         numColors = to!int(button.getValue());
         c = 0.88 < 0.34 + 0.06 * numColors ? 0.88 : 0.06 * numColors;
         scaleContrast.setValue(c);
-        onClickedGenerate(boxPalette, palette, numColors, hue, s, b, c);
+        onClickedGenerate(paletteWidget, boxPalette, palette, numColors, hue, s, b, c);
     });
 
     Main.run();
