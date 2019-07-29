@@ -17,6 +17,13 @@
     <property name="step_increment">0.01</property>
     <property name="page_increment">0.10000000000000001</property>
   </object>
+  <object class="GtkAdjustment" id="adjustmentGamma">
+    <property name="lower">1</property>
+    <property name="upper">3</property>
+    <property name="value">2.2000000000000002</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">1</property>
+  </object>
   <object class="GtkAdjustment" id="adjustmentHue">
     <property name="upper">360</property>
     <property name="step_increment">1</property>
@@ -93,12 +100,55 @@
                     <property name="position">1</property>
                   </packing>
                 </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Gamma</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSpinButton" id="spin-gamma">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="adjustment">adjustmentGamma</property>
+                    <property name="digits">1</property>
+                    <property name="value">2.2000000000000002</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">3</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="padding">3</property>
                 <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBoxText" id="combo-matrix">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="active">0</property>
+                <property name="active_id">0</property>
+                <items>
+                  <item id="0" translatable="yes">SRGB</item>
+                  <item id="1" translatable="yes">AdobeRGB</item>
+                </items>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
@@ -305,7 +355,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -317,7 +367,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">2</property>
+                <property name="position">3</property>
               </packing>
             </child>
           </object>
@@ -329,5 +379,19 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkListStore" id="matrix_options">
+    <columns>
+      <!-- column-name MatrixType -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">SRGB</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">AdobeRGB</col>
+      </row>
+    </data>
   </object>
 </interface>

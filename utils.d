@@ -1,6 +1,30 @@
 import std.math;
 import std.stdio;
 
+const double[3][3] M_SRGB = [
+    [0.4124564, 0.3575761, 0.1804375],
+    [0.2126729, 0.7151522, 0.0721750],
+    [0.0193339, 0.1191920, 0.9503041]
+];
+
+const double[3][3] M_INV_SRGB = [
+    [3.2404542,-1.5371385, -0.4985314],
+    [-0.9692660, 1.8760108, 0.0415560],
+    [0.0556434, -0.2040259, 1.0572252]
+];
+
+const double[3][3] M_ADOBE = [
+    [0.5767309, 0.1855540, 0.1881852],
+    [0.2973769, 0.6273491, 0.0752741],
+    [0.0270343, 0.0706872, 0.9911085]
+];
+
+const double[3][3] M_INV_ADOBE = [
+    [2.0413690, -0.5649464, -0.3446944],
+    [-0.9692660, 1.8760108, 0.0415560],
+    [0.0134474, -0.1183897, 1.0154096]
+];
+
 struct RGB {
     double r, g, b;
     ref double opIndex(int i) {
@@ -48,12 +72,7 @@ struct LCH {
     }
 }
 
-XYZ rgbToXYZ(RGB rgb, double gamma) {
-    double[][] M = [
-        [0.4124564, 0.3575761, 0.1804375],
-        [0.2126729, 0.7151522, 0.0721750],
-        [0.0193339, 0.1191920, 0.9503041]
-    ];
+XYZ rgbToXYZ(RGB rgb, double[3][3] M, double gamma) {
     double[] xyz = [0, 0, 0];
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -63,13 +82,7 @@ XYZ rgbToXYZ(RGB rgb, double gamma) {
     return XYZ(xyz[0], xyz[1], xyz[2]);
 }
 
-RGB xyzToRGB(XYZ xyz, double gamma) {
-    double[][] Minv = [
-        [3.2404542,-1.5371385, -0.4985314],
-        [-0.9692660, 1.8760108, 0.0415560],
-        [0.0556434, -0.2040259, 1.0572252]
-    ];
-
+RGB xyzToRGB(XYZ xyz, double[3][3] Minv, double gamma) {
     double[] rgb = [0, 0, 0];
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -136,23 +149,18 @@ LUV lchToLUV(LCH lch) {
     return LUV(lch.L, C * cos(H * PI / 180), C * sin(H * PI / 180));
 }
 
-RGB MSC(double hue)
+RGB MSC(double[3][3] M, double gamma, double hue)
 {
-    double[][] M = [
-        [0.4124564, 0.3575761, 0.1804375],
-        [0.2126729, 0.7151522, 0.0721750],
-        [0.0193339, 0.1191920, 0.9503041]
-    ];
     const double Xn = 0.95047;
     const double Yn = 1.0;
     const double Zn = 1.08883;
     int ro, sigma, theta;
-    const double hRed = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 0.0, 0.0), 2.2))).H;
-    const double hYellow = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 1.0, 0.0), 2.2))).H;
-    const double hGreen = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 1.0, 0.0), 2.2))).H;
-    const double hCyan = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 1.0, 1.0), 2.2))).H;
-    const double hBlue = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 0.0, 1.0), 2.2))).H;
-    const double hMagenta = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 0.0, 1.0), 2.2))).H;
+    const double hRed = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 0.0, 0.0), M, 2.2))).H;
+    const double hYellow = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 1.0, 0.0), M, 2.2))).H;
+    const double hGreen = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 1.0, 0.0), M, 2.2))).H;
+    const double hCyan = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 1.0, 1.0), M, 2.2))).H;
+    const double hBlue = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 0.0, 1.0), M, 2.2))).H;
+    const double hMagenta = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 0.0, 1.0), M, 2.2))).H;
     if (hue >= hRed && hue <= hYellow) {
         ro = 1;
         sigma = 2;
@@ -186,7 +194,6 @@ RGB MSC(double hue)
 
     const double Un = 4*Xn/(Xn+15*Yn+3*Zn);
     const double Vn = 9*Yn/(Xn+15*Yn+3*Zn);
-    const double gamma = 2.2;
     const double alpha = -sin(hue * PI / 180);
     const double beta = cos(hue * PI / 180);
     const double a = (alpha*Un+beta*Vn)*(M[0][theta] + 15*M[1][theta] + 3*M[2][theta])-(4*alpha*M[0][theta]+9*beta*M[1][theta]);
@@ -291,11 +298,17 @@ private:
     }
 }
 
-Palette generatePalette(double hue, double s, double b, double c)
+Palette generatePalette(
+    double[3][3] M,
+    double gamma,
+    double hue,
+    double s,
+    double b,
+    double c)
 {
     const LCH p0 = LCH(0.0, 0.0, hue);
-    const RGB msc = MSC(hue);
-    const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, 2.2)));
+    const RGB msc = MSC(M, gamma, hue);
+    const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, M, 2.2)));
     const LCH p2 = LCH(100.0, 0.0, hue);
     const LCH q0 = (1 - s)*p0 + s*p1;
     const LCH q2 = (1 - s)*p2 + s*p1;
