@@ -19,9 +19,17 @@
 docs.json
 __dummy.html
 docs/
+dub.selections.json
 
 # Code coverage
 *.lst
 main
 app
 color-generator
+
+# Glade
+design.glade~
+
+# Profile
+trace.def
+trace.log

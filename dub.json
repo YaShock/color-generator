@@ -6,7 +6,9 @@
 	"name": "color-generator",
 	"sourceFiles": [
 		"app.d",
-		"utils.d"
+		"utils.d",
+		"palette_widget.d",
+		"color_space_widget.d"
 	],
 	"targetName": "color-generator",
 	"targetType": "executable"

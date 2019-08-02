@@ -1,5 +1,6 @@
 import std.math;
 import std.stdio;
+import std.algorithm;
 
 const double[3][3] M_SRGB = [
     [0.4124564, 0.3575761, 0.1804375],
@@ -39,6 +40,13 @@ struct RGB {
 
     RGB opMul(double s) const {
         return RGB(s*r, s*g, s*b);
+    }
+
+    bool isValid()
+    {
+        return r >= 0 && r <= 1 &&
+               g >= 0 && g <= 1 &&
+               b >= 0 && b <= 1;
     }
 }
 
@@ -86,8 +94,9 @@ RGB xyzToRGB(XYZ xyz, double[3][3] Minv, double gamma) {
     double[] rgb = [0, 0, 0];
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            rgb[i] += pow(xyz[j], 1/gamma) * Minv[i][j];
+            rgb[i] += xyz[j] * Minv[i][j];
         }
+        rgb[i] = pow(rgb[i], 1.0 / gamma);
     }
     return RGB(rgb[0], rgb[1], rgb[2]);
 }
@@ -105,7 +114,7 @@ LUV xyzToLUV(XYZ xyz) {
     double yn = xyz.Y/Yn;
     double L;
     if (yn > eps)
-        L = 116*pow(yn, 1.0/3)-16;
+        L = 116*pow(yn, 1.0/3.0)-16;
     else
         L = ki*yn;
     return LUV(L, 13*L*(U-Un), 13*L*(V-Vn));
@@ -131,6 +140,7 @@ XYZ luvToXYZ(LUV luv) {
     const double X = (d - b) / (a - c);
     const double Z = X*a + b;
 
+
     return XYZ(X, Y, Z);
 }
 
@@ -155,12 +165,12 @@ RGB MSC(double[3][3] M, double gamma, double hue)
     const double Yn = 1.0;
     const double Zn = 1.08883;
     int ro, sigma, theta;
-    const double hRed = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 0.0, 0.0), M, 2.2))).H;
-    const double hYellow = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 1.0, 0.0), M, 2.2))).H;
-    const double hGreen = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 1.0, 0.0), M, 2.2))).H;
-    const double hCyan = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 1.0, 1.0), M, 2.2))).H;
-    const double hBlue = luvToLCH(xyzToLUV(rgbToXYZ(RGB(0.0, 0.0, 1.0), M, 2.2))).H;
-    const double hMagenta = luvToLCH(xyzToLUV(rgbToXYZ(RGB(1.0, 0.0, 1.0), M, 2.2))).H;
+    const double hRed = RGB(1.0, 0.0, 0.0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH.H;
+    const double hYellow = RGB(1.0, 1.0, 0.0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH.H;
+    const double hGreen = RGB(0.0, 1.0, 0.0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH.H;
+    const double hCyan = RGB(0.0, 1.0, 1.0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH.H;
+    const double hBlue = RGB(0.0, 0.0, 1.0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH.H;
+    const double hMagenta = RGB(1.0, 0.0, 1.0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH.H;
     if (hue >= hRed && hue <= hYellow) {
         ro = 1;
         sigma = 2;
@@ -304,12 +314,34 @@ Palette generatePalette(
     double hue,
     double s,
     double b,
-    double c)
+    double c,
+    double w)
 {
+    double Smax(double L, double H) {
+        const LCH pMid = MSC(M, gamma, H).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH;
+        LCH pEnd;
+        if (L <= pMid.L) {
+            pEnd = LCH(0, 0, 0);
+        }
+        else {
+            pEnd = LCH(100, 0, 0);
+        }
+        const double alpha = (pEnd.L - L) / (pEnd.L - pMid.L);
+        return alpha * (pMid.C - pEnd.C) + pEnd.C;
+    }
+    double mixHue(double alpha, double h0, double h1) {
+        const double M = (180 + h1 - h0) % 360 - 180;
+        return (h0 + alpha*M) % 360;
+    }
+    // yellow
+    const LCH pb = RGB(1, 1, 0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH;
     const LCH p0 = LCH(0.0, 0.0, hue);
     const RGB msc = MSC(M, gamma, hue);
-    const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, M, 2.2)));
-    const LCH p2 = LCH(100.0, 0.0, hue);
+    const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, M, gamma)));
+    LCH p2;
+    p2.L = (1 - w)*100+w*p0.L;
+    p2.C = min(Smax(p2.L, p2.H), w * s * pb.C);
+    p2.H = mixHue(w, hue, pb.H);
     const LCH q0 = (1 - s)*p0 + s*p1;
     const LCH q2 = (1 - s)*p2 + s*p1;
     const LCH q1 = 1.0/2.0*(q0 + q2);
