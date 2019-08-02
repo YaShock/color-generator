@@ -339,7 +339,7 @@ Palette generatePalette(
     const RGB msc = MSC(M, gamma, hue);
     const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, M, gamma)));
     LCH p2;
-    p2.L = (1 - w)*100+w*p0.L;
+    p2.L = (1 - w)*100 + w*pb.L;
     p2.C = min(Smax(p2.L, p2.H), w * s * pb.C);
     p2.H = mixHue(w, hue, pb.H);
     const LCH q0 = (1 - s)*p0 + s*p1;
