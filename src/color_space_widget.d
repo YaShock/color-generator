@@ -15,7 +15,7 @@ class ColorSpaceWidget : DrawingArea
     ColorFilterType filterType = ColorFilterType.LCH_L;
     const(double[3][3])* Minv;
     double gamma = 0.0;
-    double value;
+    double value = 0.0;
     ImageSurface surface;
     CairoOperator operator = CairoOperator.OVER;
     int width;

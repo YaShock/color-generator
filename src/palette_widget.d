@@ -1,3 +1,4 @@
+import palette;
 import utils;
 
 import gtk.DrawingArea;

@@ -4,12 +4,7 @@
 	},
 	"description": "A color generator GTK application",
 	"name": "color-generator",
-	"sourceFiles": [
-		"app.d",
-		"utils.d",
-		"palette_widget.d",
-		"color_space_widget.d"
-	],
+	"sourcePaths": ["src"],
 	"targetName": "color-generator",
 	"targetType": "executable"
 }
