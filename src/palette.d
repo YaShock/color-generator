@@ -110,7 +110,7 @@ class DivPalette : Palette
             t2 = t / (1 + abs(2.0*eps));
         }
         else {
-            t2 = (t + abs(2.0*eps)) / (1 + abs(2.0*eps));
+            t2 = (t + abs(2.0*eps)) / (1.0 + abs(2.0*eps));
         }
         if (t2 < 0.5) {
             return pSeq0(2.0*t2);

@@ -29,7 +29,12 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkAdjustment" id="adjustmentHue2">
+  <object class="GtkAdjustment" id="adjustmentHue0">
+    <property name="upper">359</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adjustmentHue1">
     <property name="upper">359</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
@@ -46,7 +51,17 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="adjustmentRange">
+    <property name="upper">1</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">0.10000000000000001</property>
+  </object>
   <object class="GtkAdjustment" id="adjustmentSaturation">
+    <property name="upper">1</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">0.10000000000000001</property>
+  </object>
+  <object class="GtkAdjustment" id="adjustmentShift">
     <property name="upper">1</property>
     <property name="step_increment">0.01</property>
     <property name="page_increment">0.10000000000000001</property>
@@ -178,12 +193,16 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="check-bivariate">
-                    <property name="label" translatable="yes">Enable bivariate palette</property>
+                  <object class="GtkComboBoxText" id="combo-palette-type">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="active">0</property>
+                    <property name="active_id">0</property>
+                    <items>
+                      <item id="0" translatable="yes">Sequential</item>
+                      <item id="1" translatable="yes">Bivariate</item>
+                      <item id="2" translatable="yes">Qualitative</item>
+                    </items>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -208,7 +227,7 @@
                             <property name="spacing">4</property>
                             <property name="homogeneous">True</property>
                             <child>
-                              <object class="GtkLabel">
+                              <object class="GtkLabel" id="label-contrast">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
@@ -223,7 +242,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel">
+                              <object class="GtkLabel" id="label-saturation">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
@@ -239,7 +258,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel">
+                              <object class="GtkLabel" id="label-brightness">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
@@ -254,7 +273,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel">
+                              <object class="GtkLabel" id="label-cold-warm">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
@@ -269,11 +288,11 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel">
+                              <object class="GtkLabel" id="label-hue">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
-                                <property name="label" translatable="yes">Hue primary:</property>
+                                <property name="label" translatable="yes">Hue:</property>
                                 <property name="justify">right</property>
                                 <property name="single_line_mode">True</property>
                               </object>
@@ -284,11 +303,11 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel">
+                              <object class="GtkLabel" id="label-hue-0">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
-                                <property name="label" translatable="yes">Hue secondary:</property>
+                                <property name="label" translatable="yes">Hue primary:</property>
                                 <property name="justify">right</property>
                                 <property name="single_line_mode">True</property>
                               </object>
@@ -299,7 +318,22 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel">
+                              <object class="GtkLabel" id="label-hue-1">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">Hue secondary:</property>
+                                <property name="justify">right</property>
+                                <property name="single_line_mode">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">6</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="label-midpoint">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
@@ -310,7 +344,37 @@
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">True</property>
-                                <property name="position">6</property>
+                                <property name="position">7</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="label-range">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">Hue range:</property>
+                                <property name="justify">right</property>
+                                <property name="single_line_mode">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">8</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="label-shift">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">Hue shift:</property>
+                                <property name="justify">right</property>
+                                <property name="single_line_mode">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">9</property>
                               </packing>
                             </child>
                           </object>
@@ -384,11 +448,11 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkScale" id="scale-hue-0">
+                              <object class="GtkScale" id="scale-hue">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="adjustment">adjustmentHue</property>
-                                <property name="round_digits">1</property>
+                                <property name="round_digits">2</property>
                                 <property name="digits">2</property>
                               </object>
                               <packing>
@@ -398,11 +462,10 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkScale" id="scale-hue-1">
+                              <object class="GtkScale" id="scale-hue-0">
                                 <property name="visible">True</property>
-                                <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
-                                <property name="adjustment">adjustmentHue2</property>
+                                <property name="adjustment">adjustmentHue0</property>
                                 <property name="round_digits">1</property>
                                 <property name="digits">2</property>
                               </object>
@@ -413,9 +476,22 @@
                               </packing>
                             </child>
                             <child>
+                              <object class="GtkScale" id="scale-hue-1">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="adjustment">adjustmentHue1</property>
+                                <property name="round_digits">1</property>
+                                <property name="digits">2</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">6</property>
+                              </packing>
+                            </child>
+                            <child>
                               <object class="GtkScale" id="scale-midpoint">
                                 <property name="visible">True</property>
-                                <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="adjustment">adjustmentMidpoint</property>
                                 <property name="round_digits">1</property>
@@ -424,7 +500,35 @@
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">True</property>
-                                <property name="position">6</property>
+                                <property name="position">7</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkScale" id="scale-range">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="adjustment">adjustmentRange</property>
+                                <property name="round_digits">2</property>
+                                <property name="digits">2</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">8</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkScale" id="scale-shift">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="adjustment">adjustmentShift</property>
+                                <property name="round_digits">2</property>
+                                <property name="digits">2</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">9</property>
                               </packing>
                             </child>
                           </object>
