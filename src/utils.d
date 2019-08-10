@@ -216,3 +216,13 @@ RGB MSC(double[3][3] M, double gamma, double hue)
     color[ro] = roValue;
     return color;
 }
+
+double hueDiff(double h0, double h1)
+{
+    h0 = h0 % 360;
+    h1 = h1 % 360;
+    if (abs(h1 - h0) < 180.0)
+        return abs(h1 - h0);
+    else
+        return 360 - abs(h1 - h0);
+}

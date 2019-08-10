@@ -25,8 +25,10 @@ import std.algorithm;
 class Application {
     this()
     {
-        initGui;
-        setDefaultParams;
+        initGui();
+        setDefaultParams();
+        onSpaceFilterTypeChanged("LCH_L");
+        onPaletteTypeChanged("Sequential");
         paletteWidget.setGamma(gamma.getValue);
         updatePalette();
     }
@@ -110,9 +112,6 @@ private:
         widgetsQual = [saturation, contrast, brightness, hueRange, hueShift,
                        saturationLabel, contrastLabel, brightnessLabel,
                        hueRangeLabel, hueShiftLabel];
-
-        onSpaceFilterTypeChanged("LCH_L");
-        onPaletteTypeChanged("Sequential");
     }
 
     void setCallbacks()
@@ -271,6 +270,7 @@ private:
                 widget.show();
             }
         }
+        updatePalette();
     }
 
     void updatePalette()
@@ -301,6 +301,16 @@ private:
                 contrast.getValue,
                 coldWarm.getValue,
                 midPoint.getValue);
+        }
+        else {
+            palette = generateQualPalette(
+                *M,
+                gamma.getValue,
+                hueShift.getValue,
+                hueRange.getValue,
+                saturation.getValue,
+                brightness.getValue,
+                contrast.getValue);
         }
         LCH[] colors = generateColors(palette, N);
         boxPalette.removeAll();

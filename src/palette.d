@@ -95,8 +95,7 @@ private:
 
 class DivPalette : Palette
 {
-    this(const SeqPalette pSeq0, const SeqPalette pSeq1, LCH neutral, double m)
-    {
+    this(const SeqPalette pSeq0, const SeqPalette pSeq1, LCH neutral, double m) {
         this.pSeq0 = pSeq0;
         this.pSeq1 = pSeq1;
         this.neutral = neutral;
@@ -126,6 +125,44 @@ private:
     const SeqPalette pSeq1;
     LCH neutral;
     double m;
+}
+
+class QualPalette : Palette
+{
+    this(
+        double[3][3] M,
+        double gamma,
+        double eps,
+        double r,
+        double s,
+        double b,
+        double c)
+    {
+        this.M = M;
+        this.gamma = gamma;
+        this.eps = eps;
+        this.r = r;
+        this.s = s;
+        this.b = b;
+        this.c = c;
+        this.cy = RGB(1, 1, 0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH;
+        this.maxs = RGB(1, 0, 0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH.C;
+        l0 = b*cy.L;
+        l1 = (1 - c) * l0;
+    }
+
+    override LCH opCall(double t) const {
+        double h = (360 * (eps + t*r)) % 360;
+        double alpha = hueDiff(h, cy.H) / 360;
+        double l = (1 - alpha) * l0 + alpha * l1;
+        double c = min(Smax(M, gamma, l, h), s * maxs);
+        return LCH(l, c, h);
+    }
+
+private:
+    LCH cy;
+    double[3][3] M;
+    double gamma, eps, r, s, b, c, l0, l1, maxs;
 }
 
 LCH pb(double[3][3] M, double gamma) {
@@ -197,6 +234,18 @@ DivPalette generateDivPalette(
     cn.H = pb.H;
     cn.C = min(Smax(M, gamma, cn.L, cn.H), sn);
     return new DivPalette(pSeq0, pSeq1, cn, m);
+}
+
+QualPalette generateQualPalette(
+    double[3][3] M,
+    double gamma,
+    double eps,
+    double r,
+    double s,
+    double b,
+    double c)
+{
+    return new QualPalette(M, gamma, eps, r, s, b, c);
 }
 
 LCH[] generateColors(Palette palette, int numColors)
