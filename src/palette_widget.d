@@ -8,6 +8,7 @@ import gtk.Widget;
 import gdk.Event;
 import cairo.Context;
 import cairo.ImageSurface;
+import gobject.Signals;
 
 class PaletteWidget : DrawingArea
 {
@@ -48,6 +49,23 @@ class PaletteWidget : DrawingArea
         drawPalette();
     }
 
+    void drawPalette()
+    {
+        Context context = Context.create(surface);
+        context.save();
+        context.setOperator(operator);
+        for (int x = 0; x < width; ++x) {
+            double t = cast(double)x / width;
+            RGB rgb = (*palette)(t).lchToLUV().luvToXYZ().xyzToRGB(*Minv, gamma);
+            context.setSourceRgb(rgb.r, rgb.g, rgb.b);
+            context.moveTo(x, 0);
+            context.lineTo(x, height);
+            context.stroke();
+        }
+        context.restore();
+        this.queueDraw();
+    }
+
 private:
     void onButtonPress(double x, double y)
     {
@@ -69,22 +87,5 @@ private:
         context.setSourceSurface(surface, 0, 0);
         context.paint();
         return true;
-    }
-
-    void drawPalette()
-    {
-        Context context = Context.create(surface);
-        context.save();
-        context.setOperator(operator);
-        for (int x = 0; x < width; ++x) {
-            double t = cast(double)x / width;
-            RGB rgb = (*palette)(t).lchToLUV().luvToXYZ().xyzToRGB(*Minv, gamma);
-            context.setSourceRgb(rgb.r, rgb.g, rgb.b);
-            context.moveTo(x, 0);
-            context.lineTo(x, height);
-            context.stroke();
-        }
-        context.restore();
-        this.queueDraw();
     }
 }

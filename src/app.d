@@ -339,6 +339,8 @@ private:
             boxPalette.add(eBox);
         }
         boxPalette.showAll();
+
+        paletteWidget.drawPalette();
     }
 
     void setDefaultParams()

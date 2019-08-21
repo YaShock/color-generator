@@ -3,8 +3,8 @@ import color_picker;
 
 import gtk.DrawingArea;
 import gtk.Widget;
-import gdk.Pixbuf;
 import gdk.Cairo;
+import gdk.Pixbuf;
 import cairo.Context;
 import cairo.ImageSurface;
 
