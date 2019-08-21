@@ -2,6 +2,7 @@ import utils;
 import palette;
 import palette_widget;
 import color_space_widget;
+import color_picker;
 
 import gtk.Builder;
 import gtk.Main;
@@ -14,6 +15,7 @@ import gtk.SpinButton;
 import gtk.ComboBoxText;
 import gtk.Adjustment;
 import gtk.Widget;
+import gtk.EventBox;
 import gdk.RGBA;
 import gobject.Signals;
 
@@ -29,7 +31,9 @@ class Application {
         setDefaultParams();
         onSpaceFilterTypeChanged("LCH_L");
         onPaletteTypeChanged("Sequential");
-        paletteWidget.setGamma(gamma.getValue);
+        paletteWidget.setGamma(gamma.getValue());
+        colorSpaceWidget.setGamma(gamma.getValue());
+        colorPicker.setGamma(gamma.getValue());
         updatePalette();
     }
 
@@ -45,6 +49,7 @@ private:
     SpinButton numColors, gamma, spaceFilterValue;
     ComboBoxText matrixType, spaceFilterType, pltType;
     Box boxPalette;
+    ColorPicker colorPicker;
     PaletteWidget paletteWidget;
     ColorSpaceWidget colorSpaceWidget;
     Palette palette;
@@ -59,18 +64,23 @@ private:
         w.showAll();
 
         Box boxMain = cast(Box)builder.getObject("box-main");
+        colorPicker = new ColorPicker(M, Minv, 2.2);
+        boxMain.packStart(colorPicker, true, false, 0);
+        boxMain.reorderChild(colorPicker, 0);
+        boxMain.showAll();
 
-        paletteWidget = new PaletteWidget(&palette, Minv, 2.2);
-        paletteWidget.drawPalette();
-        boxMain.packStart(paletteWidget, true, true, 5);
+        Box boxParams = cast(Box)builder.getObject("box-params");
+
+        paletteWidget = new PaletteWidget(&palette, Minv, 2.2, colorPicker);
+        boxParams.packStart(paletteWidget, true, true, 5);
 
         boxPalette = new Box(Orientation.VERTICAL, 4);
         Box boxSpace = cast(Box)builder.getObject("box-space");
 
-        boxMain.add(boxPalette);
-        boxMain.showAll();
+        boxParams.add(boxPalette);
+        boxParams.showAll();
 
-        colorSpaceWidget = new ColorSpaceWidget(Minv, 2.2);
+        colorSpaceWidget = new ColorSpaceWidget(Minv, 2.2, colorPicker);
         colorSpaceWidget.drawSpace();
         boxSpace.packEnd(colorSpaceWidget, true, true, 0);
         boxSpace.showAll();
@@ -156,6 +166,7 @@ private:
             updatePalette();
             paletteWidget.setGamma(button.getValue());
             colorSpaceWidget.setGamma(button.getValue());
+            colorPicker.setGamma(button.getValue());
         });
 
         matrixType.addOnChanged(delegate void(ComboBoxText comboBox) {
@@ -174,8 +185,8 @@ private:
 
     void initGui()
     {
-        loadWidgets;
-        setCallbacks;
+        loadWidgets();
+        setCallbacks();
     }
 
     void onSpaceFilterTypeChanged(string filterType)
@@ -233,6 +244,7 @@ private:
         }
         paletteWidget.setRGB(Minv);
         colorSpaceWidget.setRGB(Minv);
+        colorPicker.setRGB(M, Minv);
         updatePalette();
     }
 
@@ -318,9 +330,14 @@ private:
             RGB rgb = lch.lchToLUV().luvToXYZ().xyzToRGB(*Minv, 2.2);
             Label label = new Label("");
             label.overrideBackgroundColor(GtkStateFlags.NORMAL, new RGBA(rgb.r, rgb.g, rgb.b));
-            boxPalette.add(label);
+            EventBox eBox = new EventBox();
+            eBox.add(label);
+            auto f = (RGB rgb) => delegate void() {
+                colorPicker.setRGB(rgb);
+            };
+            Signals.connect(eBox, "button-press-event", f(rgb));
+            boxPalette.add(eBox);
         }
-        paletteWidget.drawPalette();
         boxPalette.showAll();
     }
 

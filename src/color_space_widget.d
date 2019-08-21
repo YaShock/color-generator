@@ -1,4 +1,5 @@
 import utils;
+import color_picker;
 
 import gtk.DrawingArea;
 import gtk.Widget;
@@ -12,9 +13,10 @@ enum ColorFilterType
 
 class ColorSpaceWidget : DrawingArea
 {
+    ColorPicker colorPicker;
     ColorFilterType filterType = ColorFilterType.LCH_L;
     const(double[3][3])* Minv;
-    double gamma = 0.0;
+    double gamma = 2.2;
     double value = 0.0;
     ImageSurface surface;
     CairoOperator operator = CairoOperator.OVER;
@@ -27,12 +29,18 @@ class ColorSpaceWidget : DrawingArea
     enum MIN_H = 0.0;
     enum MAX_H = 359.0;
 
-    this(const double[3][3]* Minv, double gamma)
+    this(const double[3][3]* Minv, double gamma, ColorPicker colorPicker)
     {
         this.Minv = Minv;
         this.gamma = gamma;
+        this.colorPicker = colorPicker;
         addOnDraw(&onDraw);
         addOnSizeAllocate(&onSizeAllocate);
+        this.addOnButtonPress(
+            delegate bool(GdkEventButton* btn, Widget) {
+                onButtonPress((*btn).x, (*btn).y);
+                return true;
+        });
     }
 
     void setFilterType(ColorFilterType type)
@@ -59,6 +67,13 @@ class ColorSpaceWidget : DrawingArea
         drawSpace();
     }
 
+private:
+    void onButtonPress(double x, double y)
+    {
+        RGB rgb = getColor(x, y);
+        colorPicker.setRGB(rgb);
+    }
+
     void onSizeAllocate(GtkAllocation* allocation, Widget widget)
     {
         width = allocation.width;
@@ -81,6 +96,21 @@ class ColorSpaceWidget : DrawingArea
         context.setOperator(operator);
         context.setAntialias(cairo_antialias_t.NONE);
 
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height; ++y) {
+                RGB rgb = getColor(x, y);
+                context.setSourceRgb(rgb.r, rgb.g, rgb.b);
+                context.rectangle(x, y, 1, 1);
+                context.fill();
+            }
+        }
+
+        context.restore();
+        this.queueDraw();
+    }
+
+    RGB getColor(double x, double y)
+    {
         double sw, sh;
         double l, c, h;
 
@@ -100,35 +130,23 @@ class ColorSpaceWidget : DrawingArea
             sh = 100.0 / height;
         }
 
-        for (int x = 0; x < width; ++x) {
-            for (int y = 0; y < height; ++y) {
-                if (filterType == ColorFilterType.LCH_L) {
-                    c = sw * x;
-                    h = sh * y;
-                }
-                else if (filterType == ColorFilterType.LCH_C) {
-                    l = sh * y;
-                    h = sw * x;
-                }
-                else {
-                    l = sh * y;
-                    c = sw * x;
-                }
-
-                LCH lch = LCH(l, c, h);
-                RGB rgb = lch.lchToLUV.luvToXYZ.xyzToRGB(*Minv, gamma);
-                if (rgb.isValid) {
-                    context.setSourceRgb(rgb.r, rgb.g, rgb.b);
-                }
-                else {
-                    context.setSourceRgb(0, 0, 0);
-                }
-                context.rectangle(x, height - y, 1, 1);
-                context.fill();
-            }
+        if (filterType == ColorFilterType.LCH_L) {
+            c = sw * x;
+            h = sh * y;
+        }
+        else if (filterType == ColorFilterType.LCH_C) {
+            l = sh * y;
+            h = sw * x;
+        }
+        else {
+            l = sh * y;
+            c = sw * x;
         }
 
-        context.restore();
-        this.queueDraw();
+        LCH lch = LCH(l, c, h);
+        RGB rgb = lch.lchToLUV.luvToXYZ.xyzToRGB(*Minv, gamma);
+        if (!rgb.isValid())
+            rgb = RGB(0, 0, 0);
+        return rgb;
     }
 }

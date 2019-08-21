@@ -1,6 +1,5 @@
 import std.algorithm;
 import std.math;
-import std.stdio;
 
 const double[3][3] M_SRGB = [
     [0.4124564, 0.3575761, 0.1804375],
@@ -78,6 +77,77 @@ struct LCH {
     LCH opAdd(LCH rhs) const {
         return LCH(L + rhs.L, C + rhs.C, H + rhs.H);
     }
+}
+
+struct HSV {
+    double H, S, V;
+}
+
+HSV rgbToHSV(RGB rgb)
+{
+    const double Cmin = min(rgb.r, rgb.g, rgb.b);
+    const double Cmax = max(rgb.r, rgb.g, rgb.b);
+    const double delta = Cmax - Cmin;
+    HSV hsv;
+    if (Cmax == rgb.r) {
+        hsv.H = 60.0*(((rgb.g - rgb.b) / delta) % 6);
+    }
+    else if (Cmax == rgb.g) {
+        hsv.H = 60.0*(2 + (rgb.b - rgb.r) / delta);
+    }
+    else if (Cmax == rgb.b) {
+        hsv.H = 60.0*(4 + (rgb.r - rgb.g) / delta);
+    }
+    else {
+        hsv.H = 0;
+    }
+    if (Cmax == 0) {
+        hsv.S = 0;
+    }
+    else {
+        hsv.S = delta / Cmax;
+    }
+    hsv.V = Cmax;
+    return hsv;
+}
+
+RGB hsvToRGB(HSV hsv)
+{
+    const double C = hsv.V * hsv.S;
+    const double X = C * (1 - abs(hsv.H / 60 % 2 - 1));
+    const double m = hsv.V - C;
+    double r, g, b;
+    if (hsv.H >= 0 && hsv.H < 60) {
+        r = C;
+        g = X;
+        b = 0;
+    }
+    else if (hsv.H >= 60 && hsv.H < 120) {
+        r = X;
+        g = C;
+        b = 0;
+    }
+    else if (hsv.H >= 120 && hsv.H < 180) {
+        r = 0;
+        g = C;
+        b = X;
+    }
+    else if (hsv.H >= 180 && hsv.H < 240) {
+        r = 0;
+        g = X;
+        b = C;
+    }
+    else if (hsv.H >= 240 && hsv.H < 300) {
+        r = X;
+        g = 0;
+        b = C;
+    }
+    else {
+        r = C;
+        g = 0;
+        b = X;
+    }
+    return RGB(r + m, g + m, b + m);
 }
 
 XYZ rgbToXYZ(RGB rgb, double[3][3] M, double gamma) {
