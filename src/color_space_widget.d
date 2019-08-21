@@ -3,6 +3,8 @@ import color_picker;
 
 import gtk.DrawingArea;
 import gtk.Widget;
+import gdk.Pixbuf;
+import gdk.Cairo;
 import cairo.Context;
 import cairo.ImageSurface;
 
@@ -13,15 +15,6 @@ enum ColorFilterType
 
 class ColorSpaceWidget : DrawingArea
 {
-    ColorPicker colorPicker;
-    ColorFilterType filterType = ColorFilterType.LCH_L;
-    const(double[3][3])* Minv;
-    double gamma = 2.2;
-    double value = 0.0;
-    ImageSurface surface;
-    CairoOperator operator = CairoOperator.OVER;
-    int width;
-    int height;
     enum MIN_L = 0.0;
     enum MAX_L = 100.0;
     enum MIN_C = 0.0;
@@ -79,6 +72,7 @@ private:
         width = allocation.width;
         height = allocation.height;
         surface = ImageSurface.create(CairoFormat.ARGB32, width, height);
+        pixbuf = new Pixbuf(GdkColorspace.RGB, false, 8, width, height);
         drawSpace();
     }
 
@@ -91,21 +85,28 @@ private:
 
     public void drawSpace()
     {
+        if (width == 0 || height == 0)
+            return;
         Context context = Context.create(surface);
-        context.save();
-        context.setOperator(operator);
-        context.setAntialias(cairo_antialias_t.NONE);
+        auto pixels = pixbuf.getPixels();
+        auto p = pixels;
+        auto nChannels = pixbuf.getNChannels();
+        auto rowstride = pixbuf.getRowstride();
 
         for (int x = 0; x < width; ++x) {
             for (int y = 0; y < height; ++y) {
                 RGB rgb = getColor(x, y);
-                context.setSourceRgb(rgb.r, rgb.g, rgb.b);
-                context.rectangle(x, y, 1, 1);
-                context.fill();
+                p = pixels + y * rowstride + x * nChannels;
+                p[0] = cast(char)(rgb.r * 255);
+                p[1] = cast(char)(rgb.g * 255);
+                p[2] = cast(char)(rgb.b * 255);
             }
         }
 
-        context.restore();
+        setSourcePixbuf(context, pixbuf, 0, 0);
+        context.rectangle(0, 0, width, height);
+        context.fill();
+
         this.queueDraw();
     }
 
@@ -149,4 +150,14 @@ private:
             rgb = RGB(0, 0, 0);
         return rgb;
     }
+
+    ColorPicker colorPicker;
+    ColorFilterType filterType = ColorFilterType.LCH_L;
+    const(double[3][3])* Minv;
+    double gamma = 2.2;
+    double value = 0.0;
+    ImageSurface surface;
+    Pixbuf pixbuf;
+    int width;
+    int height;
 }

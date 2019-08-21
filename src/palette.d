@@ -165,11 +165,11 @@ private:
     double gamma, eps, r, s, b, c, l0, l1, maxs;
 }
 
-LCH pb(double[3][3] M, double gamma) {
+LCH pb(in ref double[3][3] M, double gamma) {
     return RGB(1, 1, 0).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH;
 }
 
-double Smax(double[3][3] M, double gamma, double L, double H) {
+double Smax(in ref double[3][3] M, double gamma, double L, double H) {
     const LCH pMid = MSC(M, gamma, H).rgbToXYZ(M, gamma).xyzToLUV.luvToLCH;
     LCH pEnd;
     if (L <= pMid.L) {
@@ -183,7 +183,7 @@ double Smax(double[3][3] M, double gamma, double L, double H) {
 }
 
 SeqPalette generateSeqPalette(
-    double[3][3] M,
+    in ref double[3][3] M,
     double gamma,
     double hue,
     double s,
@@ -213,7 +213,7 @@ SeqPalette generateSeqPalette(
 }
 
 DivPalette generateDivPalette(
-    double[3][3] M,
+    in ref double[3][3] M,
     double gamma,
     double h0,
     double h1,

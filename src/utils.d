@@ -150,7 +150,7 @@ RGB hsvToRGB(HSV hsv)
     return RGB(r + m, g + m, b + m);
 }
 
-XYZ rgbToXYZ(RGB rgb, double[3][3] M, double gamma) {
+XYZ rgbToXYZ(RGB rgb, in ref double[3][3] M, double gamma) {
     double[] xyz = [0, 0, 0];
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -160,7 +160,7 @@ XYZ rgbToXYZ(RGB rgb, double[3][3] M, double gamma) {
     return XYZ(xyz[0], xyz[1], xyz[2]);
 }
 
-RGB xyzToRGB(XYZ xyz, double[3][3] Minv, double gamma) {
+RGB xyzToRGB(XYZ xyz, in ref double[3][3] Minv, double gamma) {
     double[] rgb = [0, 0, 0];
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -229,7 +229,7 @@ LUV lchToLUV(LCH lch) {
     return LUV(lch.L, C * cos(H * PI / 180), C * sin(H * PI / 180));
 }
 
-RGB MSC(double[3][3] M, double gamma, double hue)
+RGB MSC(in ref double[3][3] M, double gamma, double hue)
 {
     const double Xn = 0.95047;
     const double Yn = 1.0;
