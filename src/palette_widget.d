@@ -67,14 +67,14 @@ class PaletteWidget : DrawingArea
     }
 
 private:
-    void onButtonPress(double x, double y)
+    void onButtonPress(double x, double)
     {
         double t = cast(double)x / width;
         RGB rgb = (*palette)(t).lchToLUV().luvToXYZ().xyzToRGB(*Minv, gamma);
         colorPicker.setRGB(rgb);
     }
 
-    void onSizeAllocate(GtkAllocation* allocation, Widget widget)
+    void onSizeAllocate(GtkAllocation* allocation, Widget)
     {
         width = allocation.width;
         height = allocation.height;
@@ -82,7 +82,7 @@ private:
         drawPalette();
     }
 
-    bool onDraw(Scoped!Context context, Widget widget)
+    bool onDraw(Scoped!Context context, Widget)
     {
         context.setSourceSurface(surface, 0, 0);
         context.paint();

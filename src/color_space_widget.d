@@ -67,7 +67,7 @@ private:
         colorPicker.setRGB(rgb);
     }
 
-    void onSizeAllocate(GtkAllocation* allocation, Widget widget)
+    void onSizeAllocate(GtkAllocation* allocation, Widget)
     {
         width = allocation.width;
         height = allocation.height;
@@ -76,7 +76,7 @@ private:
         drawSpace();
     }
 
-    public bool onDraw(Scoped!Context context, Widget widget)
+    public bool onDraw(Scoped!Context context, Widget)
     {
         context.setSourceSurface(surface, 0, 0);
         context.paint();

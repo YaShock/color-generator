@@ -23,11 +23,13 @@ import std.stdio;
 import std.conv;
 import std.string;
 import std.algorithm;
+import std.path;
+import std.file;
 
 class Application {
-    this()
+    this(string path)
     {
-        initGui();
+        initGui(path);
         setDefaultParams();
         onSpaceFilterTypeChanged("LCH_L");
         onPaletteTypeChanged("Sequential");
@@ -56,9 +58,9 @@ private:
     const(double[3][3])* M = &M_SRGB;
     const(double[3][3])* Minv = &M_INV_SRGB;
 
-    void loadWidgets() {
+    void loadWidgets(string path) {
         Builder builder = new Builder();
-        builder.addFromFile("design.glade");
+        builder.addFromFile(buildNormalizedPath(path, "design.glade"));
         Window w = cast(Window)builder.getObject("main-window");
         w.addOnHide( delegate void(Widget){ Main.quit(); } );
         w.showAll();
@@ -175,7 +177,7 @@ private:
         spaceFilterType.addOnChanged(delegate void(ComboBoxText comboBox) {
             onSpaceFilterTypeChanged(comboBox.getActiveText());
         });
-        spaceFilterValue.addOnValueChanged(delegate void(SpinButton button) {
+        spaceFilterValue.addOnValueChanged(delegate void(SpinButton) {
             colorSpaceWidget.setFilterValue(spaceFilterValue.getValue());
         });
         pltType.addOnChanged(delegate void(ComboBoxText comboBox) {
@@ -183,9 +185,9 @@ private:
         });
     }
 
-    void initGui()
+    void initGui(string path)
     {
-        loadWidgets();
+        loadWidgets(path);
         setCallbacks();
     }
 
@@ -362,6 +364,6 @@ private:
 void main(string[] args)
 {
     Main.init(args);
-    Application app = new Application();
+    Application app = new Application(dirName(thisExePath()));
     Main.run();
 }
