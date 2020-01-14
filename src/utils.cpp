@@ -3,6 +3,30 @@
 #include <cmath>
 #include <stdexcept>
 
+const double M_SRGB[3][3] = {
+    {0.4124564, 0.3575761, 0.1804375},
+    {0.2126729, 0.7151522, 0.0721750},
+    {0.0193339, 0.1191920, 0.9503041}
+};
+
+const double M_INV_SRGB[3][3] = {
+    {3.2404542,-1.5371385, -0.4985314},
+    {-0.9692660, 1.8760108, 0.0415560},
+    {0.0556434, -0.2040259, 1.0572252}
+};
+
+const double M_ADOBE[3][3] = {
+    {0.5767309, 0.1855540, 0.1881852},
+    {0.2973769, 0.6273491, 0.0752741},
+    {0.0270343, 0.0706872, 0.9911085}
+};
+
+const double M_INV_ADOBE[3][3] = {
+    {2.0413690, -0.5649464, -0.3446944},
+    {-0.9692660, 1.8760108, 0.0415560},
+    {0.0134474, -0.1183897, 1.0154096}
+};
+
 double& RGB::operator[](int i) {
     if (i == 0)
         return r;
@@ -129,7 +153,7 @@ RGB hsvToRGB(const HSV& hsv)
     return RGB{r + m, g + m, b + m};
 }
 
-XYZ rgbToXYZ(const RGB& rgb, double M[][3], double gamma) {
+XYZ rgbToXYZ(const RGB& rgb, const double M[][3], double gamma) {
     double xyz[] = {0, 0, 0};
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -139,7 +163,7 @@ XYZ rgbToXYZ(const RGB& rgb, double M[][3], double gamma) {
     return XYZ{xyz[0], xyz[1], xyz[2]};
 }
 
-RGB xyzToRGB(const XYZ& xyz, double Minv[][3], double gamma) {
+RGB xyzToRGB(const XYZ& xyz, const double Minv[][3], double gamma) {
     double rgb[] = {0, 0, 0};
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -208,7 +232,7 @@ LUV lchToLUV(const LCH& lch) {
     return LUV{lch.L, C * cos(H * M_PI / 180), C * sin(H * M_PI / 180)};
 }
 
-RGB MSC(double M[][3], double gamma, double hue)
+RGB MSC(const double M[][3], double gamma, double hue)
 {
     const double Xn = 0.95047;
     const double Yn = 1.0;
