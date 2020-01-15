@@ -20,8 +20,11 @@ public:
 		const wxSize& size);
 	void SetDefaultValues();
 	void SetupUI();
+	void BindControls();
 
 	void OnSpin(wxSpinDoubleEvent&);
+	void OnSlider(wxCommandEvent&);
+	void RefreshPalette();
 
 private:
 	wxBoxSizer* MainSizer;
@@ -31,20 +34,22 @@ private:
 	wxStaticText* m_staticText16;
 	wxSpinCtrlDouble* m_spinCtrlDouble2;
 	wxChoice* ChoicePaletteType;
-	wxStaticText* m_staticText24;
-	wxSlider* m_slider7;
-	wxStaticText* m_staticText241;
-	wxSlider* m_slider71;
-	wxStaticText* m_staticText242;
-	wxSlider* m_slider711;
-	wxStaticText* m_staticText2421;
-	wxSlider* m_slider7111;
-	wxStaticText* m_staticText24211;
-	wxSlider* m_slider71111;
+	wxSlider* sliderContrast;
+	wxSlider* sliderSaturation;
+	wxSlider* sliderBrightness;
+	wxSlider* sliderColdWarm;
+	wxSlider* sliderHue;
 	wxStaticText* TextGenPalette;
 	wxButton* ButtonGenerate;
 
 	PaletteWidget* paletteWidget;
+
+	// sequential palette
+	double contrast;
+	double saturation;
+	double brightness;
+	double coldWarm;
+	int hue;
 
 	int numColors;
 	double gamma;

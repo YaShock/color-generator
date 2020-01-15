@@ -22,7 +22,12 @@ public:
 		double* gamma,
 		PaletteType* type,
 		const double (*M)[3][3],
-		const double (*M_INV)[3][3]);
+		const double (*M_INV)[3][3],
+		double* contrast,
+		double* saturation,
+		double* brightness,
+		double* coldWarm,
+		int* hue);
 	void GeneratePalette();
 
 private:
@@ -33,6 +38,12 @@ private:
 	PaletteType* type;
 	const double (*M)[3][3];
 	const double (*M_INV)[3][3];
+
+	double* contrast;
+	double* saturation;
+	double* brightness;
+	double* coldWarm;
+	int* hue;
 };
 
 #endif // PALETTE_WIDGET_H

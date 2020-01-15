@@ -3,6 +3,37 @@
 #include "color_picker.h"
 #include "utils.h"
 
+namespace
+{
+
+enum SliderIDs
+{
+	SLIDER_CONSTRAST = 100,
+	SLIDER_SATURATION,
+	SLIDER_BRIGHTNESS,
+	SLIDER_COLD_WARM,
+	SLIDER_HUE
+};
+
+void AddTextAndSlider(
+	wxFrame* parent,
+	wxFlexGridSizer* sizer,
+	wxSlider** slider,
+	const wxString& label,
+	int sliderID,
+	int minValue = 0,
+	int maxValue = 100)
+{
+	auto staticText = new wxStaticText(parent, wxID_ANY, label, wxDefaultPosition, wxDefaultSize, 0);
+	staticText->Wrap( -1 );
+	sizer->Add(staticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	*slider = new wxSlider(parent, sliderID, 0, minValue, maxValue, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_VALUE_LABEL);
+	sizer->Add(*slider, 0, wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND, 5 );
+}
+
+}
+
 AppFrame::AppFrame(
 	const wxString& title,
 	const wxPoint& pos,
@@ -11,10 +42,17 @@ AppFrame::AppFrame(
 {
 	SetDefaultValues();
 	SetupUI();
+	BindControls();
 }
 
 void AppFrame::SetDefaultValues()
 {
+	contrast = 0.88;
+	saturation = 0.6;
+	brightness = 0.75;
+	coldWarm = 0.15;
+	hue = 0;
+
 	numColors = 5;
 	gamma = 2.2;
 	paletteType = PaletteType::Sequential;
@@ -59,66 +97,43 @@ void AppFrame::SetupUI()
 	SizerNumColors->Add( m_staticText16, 0, wxALIGN_CENTER|wxALL, 5 );
 
 	m_spinCtrlDouble2 = new wxSpinCtrlDouble( this, 1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 20, 0, 1 );
-	m_spinCtrlDouble2->SetDigits( 0 );
+	m_spinCtrlDouble2->SetDigits(0);
 	m_spinCtrlDouble2->Bind(wxEVT_SPINCTRLDOUBLE, &AppFrame::OnSpin, this);
-	SizerNumColors->Add( m_spinCtrlDouble2, 0, wxALIGN_CENTER|wxALL, 5 );
+	SizerNumColors->Add(m_spinCtrlDouble2, 0, wxALIGN_CENTER|wxALL, 5);
+	m_spinCtrlDouble2->SetValue(numColors);
 
 
 	MainSizer->Add( SizerNumColors, 0, wxEXPAND, 5 );
 
 	wxString ChoicePaletteTypeChoices[] = { wxT("Sequential"), wxT("Bivariate"), wxT("Qualitative"), wxEmptyString };
-	int ChoicePaletteTypeNChoices = sizeof( ChoicePaletteTypeChoices ) / sizeof( wxString );
-	ChoicePaletteType = new wxChoice( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, ChoicePaletteTypeNChoices, ChoicePaletteTypeChoices, 0 );
-	ChoicePaletteType->SetSelection( 0 );
-	MainSizer->Add( ChoicePaletteType, 0, wxALL|wxEXPAND, 5 );
+	int ChoicePaletteTypeNChoices = sizeof(ChoicePaletteTypeChoices) / sizeof(wxString);
+	ChoicePaletteType = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, ChoicePaletteTypeNChoices, ChoicePaletteTypeChoices, 0);
+	ChoicePaletteType->SetSelection(0);
+	MainSizer->Add(ChoicePaletteType, 0, wxALL|wxEXPAND, 5);
 
-	wxFlexGridSizer* TableControls;
-	TableControls = new wxFlexGridSizer( 5, 2, 0, 0 );
-	TableControls->AddGrowableCol( 1 );
-	TableControls->SetFlexibleDirection( wxHORIZONTAL );
-	TableControls->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	wxFlexGridSizer* tableControls;
+	tableControls = new wxFlexGridSizer( 5, 2, 0, 0 );
+	tableControls->AddGrowableCol( 1 );
+	tableControls->SetFlexibleDirection( wxHORIZONTAL );
+	tableControls->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	m_staticText24 = new wxStaticText( this, wxID_ANY, wxT("Contrast:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText24->Wrap( -1 );
-	TableControls->Add( m_staticText24, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	AddTextAndSlider(this, tableControls, &sliderContrast, wxT("Contrast:"), SLIDER_CONSTRAST);
+	AddTextAndSlider(this, tableControls, &sliderSaturation, wxT("Saturation:"), SLIDER_SATURATION);
+	AddTextAndSlider(this, tableControls, &sliderBrightness, wxT("Brightness:"), SLIDER_BRIGHTNESS);
+	AddTextAndSlider(this, tableControls, &sliderColdWarm, wxT("Cold/Warm:"), SLIDER_COLD_WARM);
+	AddTextAndSlider(this, tableControls, &sliderHue, wxT("Hue:"), SLIDER_HUE, 0, 359);
 
-	m_slider7 = new wxSlider( this, wxID_ANY, 50, 0, 100, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_VALUE_LABEL );
-	TableControls->Add( m_slider7, 0, wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND, 5 );
+	sliderContrast->SetValue(int(contrast * 100));
+	sliderSaturation->SetValue(int(saturation * 100));
+	sliderBrightness->SetValue(int(brightness * 100));
+	sliderColdWarm->SetValue(int(coldWarm * 100));
+	sliderHue->SetValue(hue);
 
-	m_staticText241 = new wxStaticText( this, wxID_ANY, wxT("Saturation:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText241->Wrap( -1 );
-	TableControls->Add( m_staticText241, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	MainSizer->Add(tableControls, 0, wxEXPAND, 5);
 
-	m_slider71 = new wxSlider( this, wxID_ANY, 50, 0, 100, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_VALUE_LABEL );
-	TableControls->Add( m_slider71, 0, wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND, 5 );
-
-	m_staticText242 = new wxStaticText( this, wxID_ANY, wxT("Brightness:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText242->Wrap( -1 );
-	TableControls->Add( m_staticText242, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-
-	m_slider711 = new wxSlider( this, wxID_ANY, 50, 0, 100, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_VALUE_LABEL );
-	TableControls->Add( m_slider711, 0, wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND, 5 );
-
-	m_staticText2421 = new wxStaticText( this, wxID_ANY, wxT("Cold/Warm:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText2421->Wrap( -1 );
-	TableControls->Add( m_staticText2421, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-
-	m_slider7111 = new wxSlider( this, wxID_ANY, 50, 0, 100, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_VALUE_LABEL );
-	TableControls->Add( m_slider7111, 0, wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND, 5 );
-
-	m_staticText24211 = new wxStaticText( this, wxID_ANY, wxT("Hue:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText24211->Wrap( -1 );
-	TableControls->Add( m_staticText24211, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-
-	m_slider71111 = new wxSlider( this, wxID_ANY, 50, 0, 100, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_VALUE_LABEL );
-	TableControls->Add( m_slider71111, 0, wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND, 5 );
-
-
-	MainSizer->Add( TableControls, 0, wxEXPAND, 5 );
-
-	TextGenPalette = new wxStaticText( this, wxID_ANY, wxT("Generated palette"), wxDefaultPosition, wxDefaultSize, 0 );
-	TextGenPalette->Wrap( -1 );
-	MainSizer->Add( TextGenPalette, 0, wxALIGN_CENTER|wxALL, 5 );
+	TextGenPalette = new wxStaticText(this, wxID_ANY, wxT("Generated palette"), wxDefaultPosition, wxDefaultSize, 0);
+	TextGenPalette->Wrap(-1);
+	MainSizer->Add(TextGenPalette, 0, wxALIGN_CENTER|wxALL, 5);
 
 	paletteWidget = new PaletteWidget(
 		this,
@@ -126,7 +141,12 @@ void AppFrame::SetupUI()
 		&gamma,
 		&paletteType,
 		M,
-		M_INV);
+		M_INV,
+		&contrast,
+		&saturation,
+		&brightness,
+		&coldWarm,
+		&hue);
 
 	MainSizer->Add(paletteWidget, 1, wxEXPAND|wxALL, 5);
 
@@ -137,9 +157,49 @@ void AppFrame::SetupUI()
 	Centre(wxBOTH);
 }
 
+void AppFrame::BindControls()
+{
+	sliderContrast->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderSaturation->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderBrightness->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderColdWarm->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderHue->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+}
+
 void AppFrame::OnSpin(wxSpinDoubleEvent&)
 {
 	numColors = int(m_spinCtrlDouble2->GetValue());
+	RefreshPalette();
+}
+
+void AppFrame::OnSlider(wxCommandEvent& event)
+{
+	switch (event.GetId())
+	{
+	case SLIDER_CONSTRAST:
+		contrast = sliderContrast->GetValue() / 100.0;
+		break;
+	case SLIDER_SATURATION:
+		saturation = sliderSaturation->GetValue() / 100.0;
+		break;
+	case SLIDER_BRIGHTNESS:
+		brightness = sliderBrightness->GetValue() / 100.0;
+		break;
+	case SLIDER_COLD_WARM:
+		coldWarm = sliderColdWarm->GetValue() / 100.0;
+		break;
+	case SLIDER_HUE:
+		hue = sliderHue->GetValue();
+		break;
+	default:
+		break;
+	}
+	RefreshPalette();
+}
+
+void AppFrame::RefreshPalette()
+{
 	paletteWidget->GeneratePalette();
 	SetSizerAndFit(MainSizer);
+	Layout();
 }

@@ -8,13 +8,23 @@ PaletteWidget::PaletteWidget(
 	double* gamma,
 	PaletteType* type,
 	const double (*M)[3][3],
-	const double (*M_INV)[3][3]) :
+	const double (*M_INV)[3][3],
+	double* contrast,
+	double* saturation,
+	double* brightness,
+	double* coldWarm,
+	int* hue) :
 	wxPanel(parent),
 	numColors(numColors),
 	gamma(gamma),
 	type(type),
 	M(M),
-	M_INV(M_INV)
+	M_INV(M_INV),
+	contrast(contrast),
+	saturation(saturation),
+	brightness(brightness),
+	coldWarm(coldWarm),
+	hue(hue)
 {
 	sizer = new wxBoxSizer(wxVERTICAL);
 	SetSizer(sizer);
@@ -25,23 +35,23 @@ void PaletteWidget::GeneratePalette()
 {
 	int N = *numColors;
 
-	double c = 0.88 < 0.34 + 0.06 * N ? 0.88 : 0.06 * N;
 	auto p = generateSeqPalette(
 		*M,
-		2.2,
-		150,
-		0.6,
-		0.75,
-		c,
-		0.15);
+		*gamma,
+		*hue,
+		*saturation,
+		*brightness,
+		*contrast,
+		*coldWarm);
 	auto colors = generateColors(p, N);
 
 	sizer->Clear();
+	DestroyChildren();
 
 	for (int i = 0; i < N; ++i)
 	{
 		auto colorLabel = new wxPanel(this);
-		RGB color = xyzToRGB(luvToXYZ(lchToLUV(colors[i])), *M_INV, 2.2);
+		RGB color = xyzToRGB(luvToXYZ(lchToLUV(colors[i])), *M_INV, *gamma);
 		colorLabel->SetBackgroundColour(wxColour(color.r * 255, color.g * 255, color.b * 255));
 		colorLabel->SetMinSize(wxSize(100, 10));
 		sizer->Add(colorLabel, 1, wxEXPAND|wxALL, 5);
