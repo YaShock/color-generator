@@ -9,6 +9,8 @@
 
 #include <wx/spinctrl.h>
 
+#include "palette_widget.h"
+
 class AppFrame : public wxFrame
 {
 public:
@@ -16,9 +18,10 @@ public:
 		const wxString& title,
 		const wxPoint& pos,
 		const wxSize& size);
+	void SetDefaultValues();
+	void SetupUI();
 
-	void OnSpin(wxSpinEvent&);
-	void OnGenerate(wxCommandEvent&);
+	void OnSpin(wxSpinDoubleEvent&);
 
 private:
 	wxBoxSizer* MainSizer;
@@ -40,6 +43,14 @@ private:
 	wxSlider* m_slider71111;
 	wxStaticText* TextGenPalette;
 	wxButton* ButtonGenerate;
+
+	PaletteWidget* paletteWidget;
+
+	int numColors;
+	double gamma;
+	PaletteType paletteType;
+	const double (*M)[3][3];
+	const double (*M_INV)[3][3];
 };
 
 #endif // APP_FRAME_H

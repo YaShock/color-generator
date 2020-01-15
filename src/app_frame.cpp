@@ -1,6 +1,7 @@
 #include "app_frame.h"
+
 #include "color_picker.h"
-#include "palette.h"
+#include "utils.h"
 
 AppFrame::AppFrame(
 	const wxString& title,
@@ -8,7 +9,22 @@ AppFrame::AppFrame(
 	const wxSize& size)
 	: wxFrame(nullptr, -1, title, pos, size)
 {
-	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	SetDefaultValues();
+	SetupUI();
+}
+
+void AppFrame::SetDefaultValues()
+{
+	numColors = 5;
+	gamma = 2.2;
+	paletteType = PaletteType::Sequential;
+	M = &M_SRGB;
+	M_INV = &M_INV_SRGB;
+}
+
+void AppFrame::SetupUI()
+{
+	SetSizeHints( wxDefaultSize, wxDefaultSize );
 
 	MainSizer = new wxBoxSizer( wxVERTICAL );
 
@@ -44,7 +60,7 @@ AppFrame::AppFrame(
 
 	m_spinCtrlDouble2 = new wxSpinCtrlDouble( this, 1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 20, 0, 1 );
 	m_spinCtrlDouble2->SetDigits( 0 );
-	m_spinCtrlDouble2->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &AppFrame::OnSpin, this);
+	m_spinCtrlDouble2->Bind(wxEVT_SPINCTRLDOUBLE, &AppFrame::OnSpin, this);
 	SizerNumColors->Add( m_spinCtrlDouble2, 0, wxALIGN_CENTER|wxALL, 5 );
 
 
@@ -100,57 +116,30 @@ AppFrame::AppFrame(
 
 	MainSizer->Add( TableControls, 0, wxEXPAND, 5 );
 
-	ButtonGenerate = new wxButton(this, wxID_ANY, wxT("Generate"));
-	MainSizer->Add(ButtonGenerate, 0, wxALIGN_CENTER|wxALL, 5);
-	ButtonGenerate->Bind(wxEVT_BUTTON, &AppFrame::OnGenerate, this);
-
 	TextGenPalette = new wxStaticText( this, wxID_ANY, wxT("Generated palette"), wxDefaultPosition, wxDefaultSize, 0 );
 	TextGenPalette->Wrap( -1 );
 	MainSizer->Add( TextGenPalette, 0, wxALIGN_CENTER|wxALL, 5 );
 
+	paletteWidget = new PaletteWidget(
+		this,
+		&numColors,
+		&gamma,
+		&paletteType,
+		M,
+		M_INV);
 
-	this->SetSizerAndFit(MainSizer);
-	this->Layout();
+	MainSizer->Add(paletteWidget, 1, wxEXPAND|wxALL, 5);
 
-	this->Centre(wxBOTH);
+
+	SetSizerAndFit(MainSizer);
+	Layout();
+
+	Centre(wxBOTH);
 }
 
-void AppFrame::OnSpin(wxSpinEvent&)
+void AppFrame::OnSpin(wxSpinDoubleEvent&)
 {
-	std::cout << "OnSpin\n";
-	// int noColors = int(m_spinCtrlDouble2->GetValue());
-	// for (int i = 0; i < noColors; ++i)
-	// {
-	// 	auto colorLabel = new wxPanel(this);
-	// 	colorLabel->SetBackgroundColour(*wxRED);
-	// 	colorLabel->SetMinSize(wxSize(100, 10));
-	// 	MainSizer->Add(colorLabel, 1, wxEXPAND|wxALL, 5);
-	// 	SetSizerAndFit(MainSizer);
-	// }
-}
-
-void AppFrame::OnGenerate(wxCommandEvent&)
-{
-	int N = int(m_spinCtrlDouble2->GetValue());
-
-	double c = 0.88 < 0.34 + 0.06 * N ? 0.88 : 0.06 * N;
-	auto p = generateSeqPalette(
-		M_SRGB,
-		2.2,
-		150,
-		0.6,
-		0.75,
-		c,
-		0.15);
-	auto colors = generateColors(p, N);
-
-	for (int i = 0; i < N; ++i)
-	{
-		auto colorLabel = new wxPanel(this);
-		RGB color = xyzToRGB(luvToXYZ(lchToLUV(colors[i])), M_INV_SRGB, 2.2);
-		colorLabel->SetBackgroundColour(wxColour(color.r * 255, color.g * 255, color.b * 255));
-		colorLabel->SetMinSize(wxSize(100, 10));
-		MainSizer->Add(colorLabel, 1, wxEXPAND|wxALL, 5);
-		SetSizerAndFit(MainSizer);
-	}
+	numColors = int(m_spinCtrlDouble2->GetValue());
+	paletteWidget->GeneratePalette();
+	SetSizerAndFit(MainSizer);
 }
