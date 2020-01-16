@@ -1,7 +1,12 @@
 #include "utils.h"
 
+// Needed for MS compiler
+#define _USE_MATH_DEFINES
+
 #include <cmath>
 #include <stdexcept>
+#include <algorithm>
+
 
 const double M_SRGB[3][3] = {
     {0.4124564, 0.3575761, 0.1804375},

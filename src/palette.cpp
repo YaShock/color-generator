@@ -1,6 +1,7 @@
 #include "palette.h"
 
 #include <cmath>
+#include <algorithm>
 
 LCH BezierLCH::operator()(double t) const {
 	return b0*((t - 1)*(t - 1)) + b1*(2*(1 - t)*t) + b2*(t*t);
@@ -162,11 +163,11 @@ SeqPalette generateSeqPalette(
 	const LCH p0 = LCH{0.0, 0.0, hue};
 	const RGB msc = MSC(M, gamma, hue);
 	const LCH p1 = luvToLCH(xyzToLUV(rgbToXYZ(msc, M, gamma)));
-	LCH p2;
 	const LCH _pb = pb(M, gamma);
-	p2.L = (1 - w)*100 + w*_pb.L;
-	p2.C = std::min(Smax(M, gamma, p2.L, p2.H), w * s * _pb.C);
-	p2.H = mixHue(w, hue, _pb.H);
+	double p2L = (1 - w) * 100 + w * _pb.L;
+	double p2H = mixHue(w, hue, _pb.H);
+	double p2C = std::min(Smax(M, gamma, p2L, p2H), w * s * _pb.C);
+	LCH p2{ p2L, p2C, p2H };
 	const LCH q0 = p0*(1 - s) + p1*s;
 	const LCH q2 = p2*(1 - s) + p1*s;
 	const LCH q1 = (q0 + q2)*(1.0/2.0);
