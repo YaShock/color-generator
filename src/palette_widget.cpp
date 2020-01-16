@@ -45,6 +45,7 @@ void PaletteWidget::GeneratePalette()
 		*coldWarm);
 	auto colors = generateColors(p, N);
 
+	Freeze();
 	sizer->Clear();
 	DestroyChildren();
 
@@ -56,4 +57,6 @@ void PaletteWidget::GeneratePalette()
 		colorLabel->SetMinSize(wxSize(100, 10));
 		sizer->Add(colorLabel, 1, wxEXPAND|wxALL, 5);
 	}
+
+	Thaw();
 }
