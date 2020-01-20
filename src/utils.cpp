@@ -162,7 +162,7 @@ XYZ rgbToXYZ(const RGB& rgb, const double M[][3], double gamma) {
     double xyz[] = {0, 0, 0};
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            xyz[i] += pow(rgb[j], gamma) * M[i][j];
+            xyz[i] += std::pow(rgb[j], gamma) * M[i][j];
         }
     }
     return XYZ{xyz[0], xyz[1], xyz[2]};
@@ -174,6 +174,7 @@ RGB xyzToRGB(const XYZ& xyz, const double Minv[][3], double gamma) {
         for (int j = 0; j < 3; ++j) {
             rgb[i] += xyz[j] * Minv[i][j];
         }
+        rgb[i] = std::min(std::max(rgb[i], 0.0), 1.0);
         rgb[i] = std::pow(rgb[i], 1.0 / gamma);
     }
     return RGB{rgb[0], rgb[1], rgb[2]};
@@ -192,7 +193,7 @@ LUV xyzToLUV(const XYZ& xyz) {
     double yn = xyz.Y/Yn;
     double L;
     if (yn > eps)
-        L = 116*pow(yn, 1.0/3.0)-16;
+        L = 116*std::pow(yn, 1.0/3.0)-16;
     else
         L = ki*yn;
     return LUV{L, 13*L*(U-Un), 13*L*(V-Vn)};
@@ -208,7 +209,7 @@ XYZ luvToXYZ(const LUV& luv) {
 
     const double u0 = 4*Xn/(Xn + 15*Yn + 3*Zn);
     const double v0 = 9*Yn/(Xn + 15*Yn + 3*Zn);
-    const double Y = L > ki*eps ? pow(((L + 16) / 116.0), 3.0) : L / ki;
+    const double Y = L > ki*eps ? std::pow(((L + 16) / 116.0), 3.0) : L / ki;
 
     const double a = L > 0 ? 1.0/3.0*(52*L/(luv.U + 13*L*u0)-1) : 0;
     const double b = -5*Y;

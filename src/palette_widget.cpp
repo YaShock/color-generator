@@ -29,6 +29,7 @@ PaletteWidget::PaletteWidget(
 	sizer = new wxBoxSizer(wxVERTICAL);
 	SetSizer(sizer);
 	Layout();
+	GeneratePalette();
 }
 
 void PaletteWidget::GeneratePalette()

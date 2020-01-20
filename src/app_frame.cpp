@@ -53,7 +53,7 @@ void AppFrame::SetDefaultValues()
 	coldWarm = 0.15;
 	hue = 0;
 
-	numColors = 5;
+	numColors = 8;
 	gamma = 2.2;
 	paletteType = PaletteType::Sequential;
 	M = &M_SRGB;
