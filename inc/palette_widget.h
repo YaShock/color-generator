@@ -6,6 +6,8 @@
 #include <wx/wx.h>
 #endif
 
+#include <memory>
+
 enum class PaletteType
 {
 	Sequential,
