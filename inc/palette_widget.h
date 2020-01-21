@@ -13,8 +13,11 @@ enum class PaletteType
 	Qualitative
 };
 
+class Palette;
+
 class PaletteWidget : public wxPanel
 {
+	class DrawPanel;
 public:
 	PaletteWidget(
 		wxWindow* parent,
@@ -32,6 +35,9 @@ public:
 
 private:
 	wxBoxSizer* sizer;
+	DrawPanel* drawPanel;
+
+	std::unique_ptr<Palette> palette;
 
 	int* numColors;
 	double* gamma;
