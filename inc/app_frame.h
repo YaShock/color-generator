@@ -32,7 +32,7 @@ private:
 	wxSpinCtrlDouble* spinGamma;
 	wxChoice* ChoiceColorSpace;
 	wxStaticText* m_staticText16;
-	wxSpinCtrlDouble* m_spinCtrlDouble2;
+	wxSpinCtrlDouble* spinNumColors;
 	wxChoice* ChoicePaletteType;
 	wxSlider* sliderContrast;
 	wxSlider* sliderSaturation;

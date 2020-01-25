@@ -12,7 +12,10 @@ enum SliderIDs
 	SLIDER_SATURATION,
 	SLIDER_BRIGHTNESS,
 	SLIDER_COLD_WARM,
-	SLIDER_HUE
+	SLIDER_HUE,
+	SPIN_NUM_COLORS,
+	SPIN_GAMMA,
+	CHOICE_SPACE
 };
 
 void AddTextAndSlider(
@@ -62,48 +65,49 @@ void AppFrame::SetDefaultValues()
 
 void AppFrame::SetupUI()
 {
-	SetSizeHints( wxDefaultSize, wxDefaultSize );
+	SetSizeHints(wxDefaultSize, wxDefaultSize);
 
-	MainSizer = new wxBoxSizer( wxVERTICAL );
+	MainSizer = new wxBoxSizer(wxVERTICAL);
 
 	ColorPicker* colorPicker = new ColorPicker(this);
-	MainSizer->Add( colorPicker, 0, wxEXPAND, 5 );
+	MainSizer->Add(colorPicker, 0, wxEXPAND, 5);
 
 	wxBoxSizer* SizerGamma;
-	SizerGamma = new wxBoxSizer( wxHORIZONTAL );
+	SizerGamma = new wxBoxSizer(wxHORIZONTAL);
 
-	stGamma = new wxStaticText( this, wxID_ANY, wxT("Gamma"), wxDefaultPosition, wxDefaultSize, 0 );
-	stGamma->Wrap( -1 );
-	SizerGamma->Add( stGamma, 0, wxALIGN_CENTER|wxALL, 5 );
+	stGamma = new wxStaticText(this, wxID_ANY, wxT("Gamma"), wxDefaultPosition, wxDefaultSize, 0);
+	stGamma->Wrap(-1);
+	SizerGamma->Add(stGamma, 0, wxALIGN_CENTER|wxALL, 5);
 
-	spinGamma = new wxSpinCtrlDouble( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 100, 0, 1 );
-	spinGamma->SetDigits( 0 );
-	SizerGamma->Add( spinGamma, 0, wxALIGN_CENTER|wxALL, 5 );
+	spinGamma = new wxSpinCtrlDouble(this, SPIN_GAMMA, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 3, 1, 0.1);
+	spinGamma->SetDigits(1);
+	spinGamma->SetMinSize(wxSize(50, 30));
+	SizerGamma->Add(spinGamma, 0, wxALIGN_CENTER|wxALL, 5);
 
 	wxString ChoiceColorSpaceChoices[] = { wxT("SRGB"), wxT("AdobeRGB"), wxEmptyString };
 	int ChoiceColorSpaceNChoices = sizeof( ChoiceColorSpaceChoices ) / sizeof( wxString );
-	ChoiceColorSpace = new wxChoice( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, ChoiceColorSpaceNChoices, ChoiceColorSpaceChoices, 0 );
-	ChoiceColorSpace->SetSelection( 0 );
-	SizerGamma->Add( ChoiceColorSpace, 0, wxALL, 5 );
+	ChoiceColorSpace = new wxChoice(this, CHOICE_SPACE, wxDefaultPosition, wxDefaultSize, ChoiceColorSpaceNChoices, ChoiceColorSpaceChoices, 0);
+	ChoiceColorSpace->SetSelection(0);
+	SizerGamma->Add(ChoiceColorSpace, 0, wxALL, 5);
 
 
-	MainSizer->Add( SizerGamma, 0, 0, 0 );
+	MainSizer->Add(SizerGamma, 0, 0, 0);
 
 	wxBoxSizer* SizerNumColors;
-	SizerNumColors = new wxBoxSizer( wxHORIZONTAL );
+	SizerNumColors = new wxBoxSizer(wxHORIZONTAL);
 
-	m_staticText16 = new wxStaticText( this, wxID_ANY, wxT("Number of colors"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText16->Wrap( -1 );
-	SizerNumColors->Add( m_staticText16, 0, wxALIGN_CENTER|wxALL, 5 );
+	m_staticText16 = new wxStaticText(this, wxID_ANY, wxT("Number of colors"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticText16->Wrap(-1);
+	SizerNumColors->Add(m_staticText16, 0, wxALIGN_CENTER|wxALL, 5);
 
-	m_spinCtrlDouble2 = new wxSpinCtrlDouble( this, 1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 20, 0, 1 );
-	m_spinCtrlDouble2->SetDigits(0);
-	m_spinCtrlDouble2->Bind(wxEVT_SPINCTRLDOUBLE, &AppFrame::OnSpin, this);
-	SizerNumColors->Add(m_spinCtrlDouble2, 0, wxALIGN_CENTER|wxALL, 5);
-	m_spinCtrlDouble2->SetValue(numColors);
+	spinNumColors = new wxSpinCtrlDouble(this, SPIN_NUM_COLORS, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 20, 0, 1);
+	spinNumColors->SetDigits(0);
+	spinNumColors->Bind(wxEVT_SPINCTRLDOUBLE, &AppFrame::OnSpin, this);
+	SizerNumColors->Add(spinNumColors, 0, wxALIGN_CENTER|wxALL, 5);
+	spinNumColors->SetValue(numColors);
 
 
-	MainSizer->Add( SizerNumColors, 0, wxEXPAND, 5 );
+	MainSizer->Add(SizerNumColors, 0, wxEXPAND, 5);
 
 	wxString ChoicePaletteTypeChoices[] = { wxT("Sequential"), wxT("Bivariate"), wxT("Qualitative"), wxEmptyString };
 	int ChoicePaletteTypeNChoices = sizeof(ChoicePaletteTypeChoices) / sizeof(wxString);
@@ -112,10 +116,10 @@ void AppFrame::SetupUI()
 	MainSizer->Add(ChoicePaletteType, 0, wxALL|wxEXPAND, 5);
 
 	wxFlexGridSizer* tableControls;
-	tableControls = new wxFlexGridSizer( 5, 2, 0, 0 );
-	tableControls->AddGrowableCol( 1 );
-	tableControls->SetFlexibleDirection( wxHORIZONTAL );
-	tableControls->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	tableControls = new wxFlexGridSizer(5, 2, 0, 0);
+	tableControls->AddGrowableCol(1);
+	tableControls->SetFlexibleDirection(wxHORIZONTAL);
+	tableControls->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
 
 	AddTextAndSlider(this, tableControls, &sliderContrast, wxT("Contrast:"), SLIDER_CONSTRAST);
 	AddTextAndSlider(this, tableControls, &sliderSaturation, wxT("Saturation:"), SLIDER_SATURATION);
@@ -128,6 +132,7 @@ void AppFrame::SetupUI()
 	sliderBrightness->SetValue(int(brightness * 100));
 	sliderColdWarm->SetValue(int(coldWarm * 100));
 	sliderHue->SetValue(hue);
+	spinGamma->SetValue(gamma);
 
 	MainSizer->Add(tableControls, 0, wxEXPAND, 5);
 
@@ -140,8 +145,8 @@ void AppFrame::SetupUI()
 		&numColors,
 		&gamma,
 		&paletteType,
-		M,
-		M_INV,
+		&M,
+		&M_INV,
 		&contrast,
 		&saturation,
 		&brightness,
@@ -164,16 +169,29 @@ void AppFrame::BindControls()
 	sliderBrightness->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
 	sliderColdWarm->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
 	sliderHue->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	spinGamma->Bind(wxEVT_SPINCTRLDOUBLE, &AppFrame::OnSpin, this);
+	ChoiceColorSpace->Bind(wxEVT_CHOICE, &AppFrame::OnSlider, this);
 }
 
-void AppFrame::OnSpin(wxSpinDoubleEvent&)
+void AppFrame::OnSpin(wxSpinDoubleEvent& event)
 {
-	numColors = int(m_spinCtrlDouble2->GetValue());
+	switch (event.GetId())
+	{
+	case SPIN_NUM_COLORS:
+		numColors = int(spinNumColors->GetValue());
+		break;
+	case SPIN_GAMMA:
+		gamma = spinGamma->GetValue();
+		break;
+	default:
+		break;
+	}
 	RefreshPalette();
 }
 
 void AppFrame::OnSlider(wxCommandEvent& event)
 {
+	int s = ChoiceColorSpace->GetCurrentSelection();
 	switch (event.GetId())
 	{
 	case SLIDER_CONSTRAST:
@@ -190,6 +208,18 @@ void AppFrame::OnSlider(wxCommandEvent& event)
 		break;
 	case SLIDER_HUE:
 		hue = sliderHue->GetValue();
+		break;
+	case CHOICE_SPACE:
+		if (ChoiceColorSpace->GetString(s) == wxT("SRGB"))
+		{
+			M = &M_SRGB;
+			M_INV = &M_INV_SRGB;
+		}
+		else if (ChoiceColorSpace->GetString(s) == wxT("AdobeRGB"))
+		{
+			M = &M_ADOBE;
+			M_INV = &M_INV_ADOBE;
+		}
 		break;
 	default:
 		break;

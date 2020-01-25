@@ -26,8 +26,8 @@ public:
 		int* numColors,
 		double* gamma,
 		PaletteType* type,
-		const double (*M)[3][3],
-		const double (*M_INV)[3][3],
+		const double (**M)[3][3],
+		const double (**M_INV)[3][3],
 		double* contrast,
 		double* saturation,
 		double* brightness,
@@ -44,8 +44,8 @@ private:
 	int* numColors;
 	double* gamma;
 	PaletteType* type;
-	const double (*M)[3][3];
-	const double (*M_INV)[3][3];
+	const double (**M)[3][3];
+	const double (**M_INV)[3][3];
 
 	double* contrast;
 	double* saturation;

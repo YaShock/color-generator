@@ -58,8 +58,8 @@ PaletteWidget::PaletteWidget(
 	int* numColors,
 	double* gamma,
 	PaletteType* type,
-	const double (*M)[3][3],
-	const double (*M_INV)[3][3],
+	const double (**M)[3][3],
+	const double (**M_INV)[3][3],
 	double* contrast,
 	double* saturation,
 	double* brightness,
@@ -88,7 +88,7 @@ void PaletteWidget::GeneratePalette()
 	int N = *numColors;
 
 	palette = std::make_unique<SeqPalette>(generateSeqPalette(
-		*M,
+		**M,
 		*gamma,
 		*hue,
 		*saturation,
@@ -107,7 +107,7 @@ void PaletteWidget::GeneratePalette()
 	for (int i = 0; i < N; ++i)
 	{
 		auto colorLabel = new wxPanel(this);
-		RGB color = xyzToRGB(luvToXYZ(lchToLUV(colors[i])), *M_INV, *gamma);
+		RGB color = xyzToRGB(luvToXYZ(lchToLUV(colors[i])), **M_INV, *gamma);
 		colorLabel->SetBackgroundColour(wxColour(color.r * 255, color.g * 255, color.b * 255));
 		colorLabel->SetMinSize(wxSize(100, 10));
 		sizer->Add(colorLabel, 1, wxEXPAND|wxALL, 5);
