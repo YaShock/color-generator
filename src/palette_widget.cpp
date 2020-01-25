@@ -11,7 +11,7 @@ public:
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
-	void OnPaint(wxPaintEvent& event);
+	void OnPaint(wxPaintEvent&);
 	void Render(wxDC& dc);
 
 	DECLARE_EVENT_TABLE()
@@ -35,7 +35,7 @@ PaletteWidget::DrawPanel::DrawPanel(
 {
 }
 
-void PaletteWidget::DrawPanel::OnPaint(wxPaintEvent& event)
+void PaletteWidget::DrawPanel::OnPaint(wxPaintEvent&)
 {
 	wxClientDC dc(this);
 	Render(dc);
@@ -102,7 +102,7 @@ void PaletteWidget::GeneratePalette()
 	DestroyChildren();
 
 	drawPanel = new DrawPanel(palette, this);
-	sizer->Add(drawPanel, 1, wxEXPAND | wxALL, 5);
+	sizer->Add(drawPanel, 2, wxEXPAND | wxALL, 5);
 
 	for (int i = 0; i < N; ++i)
 	{

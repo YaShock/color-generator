@@ -199,7 +199,13 @@ void AppFrame::OnSlider(wxCommandEvent& event)
 
 void AppFrame::RefreshPalette()
 {
+	auto oldSize = GetSize();
+
 	paletteWidget->GeneratePalette();
 	SetSizerAndFit(MainSizer);
 	Layout();
+
+	SetSize(
+		std::max(GetSize().GetWidth(), oldSize.GetWidth()),
+		std::max(GetSize().GetHeight(), oldSize.GetHeight()));
 }
