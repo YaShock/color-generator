@@ -16,7 +16,7 @@ public:
 	void SetColor(const RGB& color);
 
 private:
-	wxStaticText* colorLabel;
+	wxPanel* colorLabel;
 	wxSpinCtrlDouble* spinHsvHue;
 	wxSpinCtrlDouble* spinHsvSat;
 	wxSpinCtrlDouble* spinHsvVal;

@@ -111,7 +111,19 @@ void PaletteWidget::GeneratePalette()
 		colorLabel->SetBackgroundColour(wxColour(color.r * 255, color.g * 255, color.b * 255));
 		colorLabel->SetMinSize(wxSize(100, 10));
 		sizer->Add(colorLabel, 1, wxEXPAND|wxALL, 5);
+
+		colorLabel->Bind(wxEVT_LEFT_DOWN,
+			[this, color](wxMouseEvent&){
+				if (colorClicked) {
+					colorClicked(color);
+				}
+			});
 	}
 
 	Thaw();
+}
+
+void PaletteWidget::SetColorCallback(std::function<void(const RGB&)> cb)
+{
+	colorClicked = cb;
 }

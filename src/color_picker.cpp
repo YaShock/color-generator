@@ -41,7 +41,7 @@ ColorPicker::ColorPicker(wxWindow* parent)
 {
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	colorLabel = new wxStaticText(this, wxID_ANY, wxT(""), wxDefaultPosition, wxDefaultSize, 0);
+	colorLabel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
 	colorLabel->SetMinSize(wxSize(100,100));
 	colorLabel->SetBackgroundColour(wxColour(0, 0, 0));
 
@@ -83,4 +83,9 @@ ColorPicker::ColorPicker(wxWindow* parent)
 
 void ColorPicker::SetColor(const RGB& color)
 {
+	spinRgbRed->SetValue(int(color.r * 100));
+	spinRgbGreen->SetValue(int(color.g * 100));
+	spinRgbBlue->SetValue(int(color.b * 100));
+
+	colorLabel->SetBackgroundColour(wxColour(color.r * 255, color.g * 255, color.b * 255));
 }

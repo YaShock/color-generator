@@ -15,7 +15,8 @@ enum SliderIDs
 	SLIDER_HUE,
 	SPIN_NUM_COLORS,
 	SPIN_GAMMA,
-	CHOICE_SPACE
+	CHOICE_SPACE,
+	CLICK_COLOR
 };
 
 void AddTextAndSlider(
@@ -46,6 +47,11 @@ AppFrame::AppFrame(
 	SetDefaultValues();
 	SetupUI();
 	BindControls();
+
+	paletteWidget->SetColorCallback(
+		[this](const RGB& color) {
+			colorPicker->SetColor(color);
+		});
 }
 
 void AppFrame::SetDefaultValues()
@@ -69,7 +75,7 @@ void AppFrame::SetupUI()
 
 	MainSizer = new wxBoxSizer(wxVERTICAL);
 
-	ColorPicker* colorPicker = new ColorPicker(this);
+	colorPicker = new ColorPicker(this);
 	MainSizer->Add(colorPicker, 0, wxEXPAND, 5);
 
 	wxBoxSizer* SizerGamma;

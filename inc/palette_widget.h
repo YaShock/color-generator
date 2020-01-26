@@ -7,6 +7,8 @@
 #endif
 
 #include <memory>
+#include <functional>
+#include "utils.h"
 
 enum class PaletteType
 {
@@ -34,10 +36,12 @@ public:
 		double* coldWarm,
 		int* hue);
 	void GeneratePalette();
+	void SetColorCallback(std::function<void(const RGB&)> cb);
 
 private:
 	wxBoxSizer* sizer;
 	DrawPanel* drawPanel;
+	std::function<void(const RGB&)> colorClicked;
 
 	std::unique_ptr<Palette> palette;
 

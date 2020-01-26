@@ -11,6 +11,8 @@
 
 #include "palette_widget.h"
 
+class ColorPicker;
+
 class AppFrame : public wxFrame
 {
 public:
@@ -28,6 +30,7 @@ public:
 
 private:
 	wxBoxSizer* MainSizer;
+	ColorPicker* colorPicker;
 	wxStaticText* stGamma;
 	wxSpinCtrlDouble* spinGamma;
 	wxChoice* ChoiceColorSpace;
