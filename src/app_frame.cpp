@@ -75,7 +75,7 @@ void AppFrame::SetupUI()
 
 	MainSizer = new wxBoxSizer(wxVERTICAL);
 
-	colorPicker = new ColorPicker(this);
+	colorPicker = new ColorPicker(this, &gamma, &M, &M_INV);
 	MainSizer->Add(colorPicker, 0, wxEXPAND, 5);
 
 	wxBoxSizer* SizerGamma;

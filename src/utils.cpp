@@ -98,7 +98,7 @@ HSV rgbToHSV(const RGB& rgb)
     const double delta = Cmax - Cmin;
     HSV hsv;
     if (Cmax == rgb.r) {
-        hsv.H = 60.0*(int((rgb.g - rgb.b) / delta) % 6);
+        hsv.H = 60.0*(fmod((rgb.g - rgb.b) / delta, 6));
     }
     else if (Cmax == rgb.g) {
         hsv.H = 60.0*(2 + (rgb.b - rgb.r) / delta);
@@ -122,7 +122,7 @@ HSV rgbToHSV(const RGB& rgb)
 RGB hsvToRGB(const HSV& hsv)
 {
     const double C = hsv.V * hsv.S;
-    const double X = C * (1 - std::abs(int(hsv.H / 60) % 2 - 1));
+    const double X = C * (1 - std::abs(fmod(hsv.H / 60.0, 2.0) - 1));
     const double m = hsv.V - C;
     double r, g, b;
     if (hsv.H >= 0 && hsv.H < 60) {
