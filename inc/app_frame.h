@@ -26,24 +26,34 @@ public:
 
 	void OnSpin(wxSpinDoubleEvent&);
 	void OnSlider(wxCommandEvent&);
+	void OnPaletteType(wxCommandEvent&);
 	void RefreshPalette();
 
 private:
-	wxBoxSizer* MainSizer;
+	wxBoxSizer* mainSizer;
 	ColorPicker* colorPicker;
 	wxStaticText* stGamma;
 	wxSpinCtrlDouble* spinGamma;
-	wxChoice* ChoiceColorSpace;
+	wxChoice* choiceColorSpace;
 	wxStaticText* m_staticText16;
 	wxSpinCtrlDouble* spinNumColors;
-	wxChoice* ChoicePaletteType;
+	wxChoice* choicePaletteType;
 	wxSlider* sliderContrast;
 	wxSlider* sliderSaturation;
 	wxSlider* sliderBrightness;
 	wxSlider* sliderColdWarm;
 	wxSlider* sliderHue;
-	wxStaticText* TextGenPalette;
-	wxButton* ButtonGenerate;
+	wxSlider* sliderHue0;
+	wxSlider* sliderHue1;
+	wxSlider* sliderMidPoint;
+	wxSlider* sliderHueRange;
+	wxSlider* sliderHueShift;
+	wxStaticText* textGenPalette;
+	wxButton* buttonGenerate;
+
+	std::vector<wxControl*> widgetsSeq;
+	std::vector<wxControl*> widgetsDiv;
+	std::vector<wxControl*> widgetsQual;
 
 	PaletteWidget* paletteWidget;
 

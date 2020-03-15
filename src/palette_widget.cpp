@@ -74,7 +74,7 @@ PaletteWidget::PaletteWidget(
 	wxWindow* parent,
 	int* numColors,
 	double* gamma,
-	PaletteType* type,
+	PaletteType type,
 	const double (**M)[3][3],
 	const double (**M_INV)[3][3],
 	double* contrast,
@@ -143,4 +143,22 @@ void PaletteWidget::GeneratePalette()
 void PaletteWidget::SetColorCallback(std::function<void(const RGB&)> cb)
 {
 	colorClicked = cb;
+}
+
+std::unique_ptr<Palette> PaletteWidget::CreatePalette()
+{
+	switch (type)
+	{
+	case PaletteType::Sequential:
+		return std::make_unique<SeqPalette>();
+	case PaletteType::Bivariate:
+		return std::make_unique<DivPalette>();
+	case PaletteType::Qualitative:
+		return std::make_unique<QualPalette>();
+	}
+}
+
+void PaletteWidget::SetPaletteType(PaletteType type)
+{
+	this->type = type;
 }

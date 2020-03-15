@@ -27,7 +27,7 @@ public:
 		wxWindow* parent,
 		int* numColors,
 		double* gamma,
-		PaletteType* type,
+		PaletteType type,
 		const double (**M)[3][3],
 		const double (**M_INV)[3][3],
 		double* contrast,
@@ -37,8 +37,11 @@ public:
 		int* hue);
 	void GeneratePalette();
 	void SetColorCallback(std::function<void(const RGB&)> cb);
+	void SetPaletteType(PaletteType type);
 
 private:
+	std::unique_ptr<Palette> CreatePalette();
+
 	wxBoxSizer* sizer;
 	DrawPanel* drawPanel;
 	std::function<void(const RGB&)> colorClicked;
@@ -47,7 +50,7 @@ private:
 
 	int* numColors;
 	double* gamma;
-	PaletteType* type;
+	PaletteType type;
 	const double (**M)[3][3];
 	const double (**M_INV)[3][3];
 

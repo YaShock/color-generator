@@ -73,10 +73,10 @@ void AppFrame::SetupUI()
 {
 	SetSizeHints(wxDefaultSize, wxDefaultSize);
 
-	MainSizer = new wxBoxSizer(wxVERTICAL);
+	mainSizer = new wxBoxSizer(wxVERTICAL);
 
 	colorPicker = new ColorPicker(this, &gamma, &M, &M_INV);
-	MainSizer->Add(colorPicker, 0, wxEXPAND, 5);
+	mainSizer->Add(colorPicker, 0, wxEXPAND, 5);
 
 	wxBoxSizer* SizerGamma;
 	SizerGamma = new wxBoxSizer(wxHORIZONTAL);
@@ -92,12 +92,12 @@ void AppFrame::SetupUI()
 
 	wxString ChoiceColorSpaceChoices[] = { wxT("SRGB"), wxT("AdobeRGB"), wxEmptyString };
 	int ChoiceColorSpaceNChoices = sizeof( ChoiceColorSpaceChoices ) / sizeof( wxString );
-	ChoiceColorSpace = new wxChoice(this, CHOICE_SPACE, wxDefaultPosition, wxDefaultSize, ChoiceColorSpaceNChoices, ChoiceColorSpaceChoices, 0);
-	ChoiceColorSpace->SetSelection(0);
-	SizerGamma->Add(ChoiceColorSpace, 0, wxALL, 5);
+	choiceColorSpace = new wxChoice(this, CHOICE_SPACE, wxDefaultPosition, wxDefaultSize, ChoiceColorSpaceNChoices, ChoiceColorSpaceChoices, 0);
+	choiceColorSpace->SetSelection(0);
+	SizerGamma->Add(choiceColorSpace, 0, wxALL, 5);
 
 
-	MainSizer->Add(SizerGamma, 0, 0, 0);
+	mainSizer->Add(SizerGamma, 0, 0, 0);
 
 	wxBoxSizer* SizerNumColors;
 	SizerNumColors = new wxBoxSizer(wxHORIZONTAL);
@@ -113,13 +113,14 @@ void AppFrame::SetupUI()
 	spinNumColors->SetValue(numColors);
 
 
-	MainSizer->Add(SizerNumColors, 0, wxEXPAND, 5);
+	mainSizer->Add(SizerNumColors, 0, wxEXPAND, 5);
 
-	wxString ChoicePaletteTypeChoices[] = { wxT("Sequential"), wxT("Bivariate"), wxT("Qualitative"), wxEmptyString };
+	wxString ChoicePaletteTypeChoices[] = { wxT("Sequential"), wxT("Bivariate"), wxT("Qualitative") };
 	int ChoicePaletteTypeNChoices = sizeof(ChoicePaletteTypeChoices) / sizeof(wxString);
-	ChoicePaletteType = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, ChoicePaletteTypeNChoices, ChoicePaletteTypeChoices, 0);
-	ChoicePaletteType->SetSelection(0);
-	MainSizer->Add(ChoicePaletteType, 0, wxALL|wxEXPAND, 5);
+	choicePaletteType = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, ChoicePaletteTypeNChoices, ChoicePaletteTypeChoices, 0);
+	choicePaletteType->SetSelection(0);
+	choicePaletteType->Bind(wxEVT_CHOICE, &AppFrame::OnPaletteType, this);
+	mainSizer->Add(choicePaletteType, 0, wxALL|wxEXPAND, 5);
 
 	wxFlexGridSizer* tableControls;
 	tableControls = new wxFlexGridSizer(5, 2, 0, 0);
@@ -140,11 +141,36 @@ void AppFrame::SetupUI()
 	sliderHue->SetValue(hue);
 	spinGamma->SetValue(gamma);
 
-	MainSizer->Add(tableControls, 0, wxEXPAND, 5);
+	mainSizer->Add(tableControls, 0, wxEXPAND, 5);
 
-	TextGenPalette = new wxStaticText(this, wxID_ANY, wxT("Generated palette"), wxDefaultPosition, wxDefaultSize, 0);
-	TextGenPalette->Wrap(-1);
-	MainSizer->Add(TextGenPalette, 0, wxALIGN_CENTER|wxALL, 5);
+	textGenPalette = new wxStaticText(this, wxID_ANY, wxT("Generated palette"), wxDefaultPosition, wxDefaultSize, 0);
+	textGenPalette->Wrap(-1);
+	mainSizer->Add(textGenPalette, 0, wxALIGN_CENTER|wxALL, 5);
+
+	widgetsSeq = {
+		sliderHue,
+		sliderSaturation,
+		sliderContrast,
+		sliderBrightness,
+		sliderColdWarm
+	};
+	widgetsDiv = {
+		sliderHue0,
+		sliderHue0,
+		sliderSaturation,
+		sliderContrast,
+		sliderBrightness,
+		sliderColdWarm,
+		sliderMidPoint
+	};
+
+	widgetsQual = {
+		sliderSaturation,
+		sliderContrast,
+		sliderBrightness,
+		sliderHueRange,
+		sliderHueShift
+	};
 
 	paletteWidget = new PaletteWidget(
 		this,
@@ -159,10 +185,10 @@ void AppFrame::SetupUI()
 		&coldWarm,
 		&hue);
 
-	MainSizer->Add(paletteWidget, 1, wxEXPAND|wxALL, 5);
+	mainSizer->Add(paletteWidget, 1, wxEXPAND|wxALL, 5);
 
 
-	SetSizerAndFit(MainSizer);
+	SetSizerAndFit(mainSizer);
 	Layout();
 
 	Centre(wxBOTH);
@@ -176,7 +202,7 @@ void AppFrame::BindControls()
 	sliderColdWarm->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
 	sliderHue->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
 	spinGamma->Bind(wxEVT_SPINCTRLDOUBLE, &AppFrame::OnSpin, this);
-	ChoiceColorSpace->Bind(wxEVT_CHOICE, &AppFrame::OnSlider, this);
+	choiceColorSpace->Bind(wxEVT_CHOICE, &AppFrame::OnSlider, this);
 }
 
 void AppFrame::OnSpin(wxSpinDoubleEvent& event)
@@ -197,7 +223,7 @@ void AppFrame::OnSpin(wxSpinDoubleEvent& event)
 
 void AppFrame::OnSlider(wxCommandEvent& event)
 {
-	int s = ChoiceColorSpace->GetCurrentSelection();
+	int s = choiceColorSpace->GetCurrentSelection();
 	switch (event.GetId())
 	{
 	case SLIDER_CONSTRAST:
@@ -216,12 +242,12 @@ void AppFrame::OnSlider(wxCommandEvent& event)
 		hue = sliderHue->GetValue();
 		break;
 	case CHOICE_SPACE:
-		if (ChoiceColorSpace->GetString(s) == wxT("SRGB"))
+		if (choiceColorSpace->GetString(s) == wxT("SRGB"))
 		{
 			M = &M_SRGB;
 			M_INV = &M_INV_SRGB;
 		}
-		else if (ChoiceColorSpace->GetString(s) == wxT("AdobeRGB"))
+		else if (choiceColorSpace->GetString(s) == wxT("AdobeRGB"))
 		{
 			M = &M_ADOBE;
 			M_INV = &M_INV_ADOBE;
@@ -233,12 +259,65 @@ void AppFrame::OnSlider(wxCommandEvent& event)
 	RefreshPalette();
 }
 
+void AppFrame::OnPaletteType(wxCommandEvent&)
+{
+	int s = choicePaletteType->GetCurrentSelection();
+	if (choicePaletteType->GetString(s) == wxT("Sequential"))
+	{
+		paletteType = PaletteType::Sequential;
+	}
+	else if (choicePaletteType->GetString(s) == wxT("Bivariate"))
+	{
+		paletteType = PaletteType::Bivariate;
+	}
+	else if (choicePaletteType->GetString(s) == wxT("Qualitative"))
+	{
+		paletteType = PaletteType::Qualitative;
+	}
+
+	/*
+	foreach (widget; widgetsSeq) {
+		if (widget.isVisible()) {
+			widget.hide();
+		}
+	}
+	foreach (widget; widgetsDiv) {
+		if (widget.isVisible()) {
+			widget.hide();
+		}
+	}
+	foreach (widget; widgetsQual) {
+		if (widget.isVisible()) {
+			widget.hide();
+		}
+	}
+	 //Activate only current scales and labels
+	if (type == "Sequential") {
+		foreach (widget; widgetsSeq) {
+			widget.show();
+		}
+	}
+	else if (type == "Bivariate") {
+		foreach (widget; widgetsDiv) {
+			widget.show();
+		}
+	}
+	else {
+		foreach (widget; widgetsQual) {
+			widget.show();
+		}
+	}
+
+	RefreshPalette();
+	*/
+}
+
 void AppFrame::RefreshPalette()
 {
 	auto oldSize = GetSize();
 
 	paletteWidget->GeneratePalette();
-	SetSizerAndFit(MainSizer);
+	SetSizerAndFit(mainSizer);
 	Layout();
 
 	SetSize(
