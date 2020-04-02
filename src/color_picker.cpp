@@ -198,6 +198,7 @@ RGB ColorPicker::CurrentRGB()
 void ColorPicker::SetColor(const RGB& color)
 {
 	colorLabel->SetBackgroundColour(wxColour(color.r * 255, color.g * 255, color.b * 255));
+	colorLabel->Refresh();
 
 	// Every other space
 	HSV hsv = rgbToHSV(color);
