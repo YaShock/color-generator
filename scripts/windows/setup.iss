@@ -2,8 +2,9 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Color Generator"
-#define MyAppVersion "0.1"
+#define MyAppVersion "0.2"
 #define MyAppExeName "color-generator.exe"
+#define RootDir "{SourcePath}\..\.."
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -16,7 +17,7 @@ AppVersion={#MyAppVersion}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-OutputDir=C:\Users\Andi\Documents\color-picker\bin
+OutputDir="{#RootDir}\bin"
 OutputBaseFilename=setup-color-generator
 Compression=lzma
 SolidCompression=yes
@@ -28,9 +29,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\Andi\Documents\color-picker\color-generator.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "C:\Users\Andi\Documents\color-picker\design.glade"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "C:\Users\Andi\Documents\color-picker\Gtk\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+Source: "{#RootDir}\bin\color-generator.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

@@ -23,21 +23,23 @@ Requires a GTK runtime. If installed, just download the AppImage and make it run
 
 ### Windows
 
-Just download and run the installer, no GTK runtime is required because it is bundled with the application.
+Just download and run the installer, no runtime is required because it is bundled with the application.
 
 ## Building
 
-You will need a D Compiler, dub, GTK runtime and gtkD.
-For example DMD compiler can acquired from https://dlang.org/
-To acquire gtkD follow the instructions at https://gtkd.org/
+You will need a C++ compiler, CMake and wxWidgets.
 
 ### Linux
 
-You can simply run dub to fetch gtkd and build the application.
+Simply run CMake to generate a Makefile and then use make to build. If you installed wxWidgets through a package manager, then CMake will automatically find wxWidgets through _find_package_ macro.
 
 ### Windows
 
-gtkD has to be manually compiled, using dub produces errors. Use DMD to compile sources and link gtkd.
+The wxWigets libary has to be installed or manually build (I prefer the latter case). Using CMake GUI you can set the wxWidgets path after running _configure_.
+
+Mac OS
+
+#### TODO
 
 ## Deploying
 
@@ -50,4 +52,8 @@ Modify the script/linux/build_appimage.sh and change the path to these tools. Ru
 
 ### Windows
 
-Copy the contents of GTK runtime to path/to/app/Gtk. Then use InnoSetup to generate the installer. You will need to change the paths accordingly.
+Install InnoSetup in order to create installer for the application. You should be able to just compile the script found in _scripts/windows_, which produces a Windows installer.
+
+### Mac OS
+
+TODO
