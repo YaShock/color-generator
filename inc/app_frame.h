@@ -13,6 +13,13 @@
 
 class ColorPicker;
 
+enum class PaletteType
+{
+	Sequential,
+	Bivariate,
+	Qualitative
+};
+
 class AppFrame : public wxFrame
 {
 public:
@@ -27,7 +34,9 @@ public:
 	void OnSpin(wxSpinDoubleEvent&);
 	void OnSlider(wxCommandEvent&);
 	void OnPaletteType(wxCommandEvent&);
+	void SetPaletteTypeWidgets();
 	void RefreshPalette();
+	void SetupPalette();
 
 private:
 	wxBoxSizer* mainSizer;
@@ -38,6 +47,9 @@ private:
 	wxStaticText* m_staticText16;
 	wxSpinCtrlDouble* spinNumColors;
 	wxChoice* choicePaletteType;
+	wxStaticText* textGenPalette;
+	wxButton* buttonGenerate;
+
 	wxSlider* sliderContrast;
 	wxSlider* sliderSaturation;
 	wxSlider* sliderBrightness;
@@ -48,21 +60,23 @@ private:
 	wxSlider* sliderMidPoint;
 	wxSlider* sliderHueRange;
 	wxSlider* sliderHueShift;
-	wxStaticText* textGenPalette;
-	wxButton* buttonGenerate;
+	wxStaticText* textContrast;
+	wxStaticText* textSaturation;
+	wxStaticText* textBrightness;
+	wxStaticText* textColdWarm;
+	wxStaticText* textHue;
+	wxStaticText* textHue0;
+	wxStaticText* textHue1;
+	wxStaticText* textMidPoint;
+	wxStaticText* textHueRange;
+	wxStaticText* textHueShift;
 
 	std::vector<wxControl*> widgetsSeq;
 	std::vector<wxControl*> widgetsDiv;
 	std::vector<wxControl*> widgetsQual;
 
 	PaletteWidget* paletteWidget;
-
-	// sequential palette
-	double contrast;
-	double saturation;
-	double brightness;
-	double coldWarm;
-	int hue;
+	std::unique_ptr<Palette> palette;
 
 	int numColors;
 	double gamma;

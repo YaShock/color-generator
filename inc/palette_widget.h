@@ -10,13 +10,6 @@
 #include <functional>
 #include "utils.h"
 
-enum class PaletteType
-{
-	Sequential,
-	Bivariate,
-	Qualitative
-};
-
 class Palette;
 
 class PaletteWidget : public wxPanel
@@ -27,38 +20,20 @@ public:
 		wxWindow* parent,
 		int* numColors,
 		double* gamma,
-		PaletteType type,
-		const double (**M)[3][3],
-		const double (**M_INV)[3][3],
-		double* contrast,
-		double* saturation,
-		double* brightness,
-		double* coldWarm,
-		int* hue);
+		const double(**M_INV)[3][3],
+		std::unique_ptr<Palette>& palette);
 	void GeneratePalette();
 	void SetColorCallback(std::function<void(const RGB&)> cb);
-	void SetPaletteType(PaletteType type);
-
-private:
-	std::unique_ptr<Palette> CreatePalette();
 
 	wxBoxSizer* sizer;
 	DrawPanel* drawPanel;
-	std::function<void(const RGB&)> colorClicked;
-
-	std::unique_ptr<Palette> palette;
+	std::unique_ptr<Palette>& palette;
 
 	int* numColors;
 	double* gamma;
-	PaletteType type;
-	const double (**M)[3][3];
-	const double (**M_INV)[3][3];
+	const double(**M_INV)[3][3];
 
-	double* contrast;
-	double* saturation;
-	double* brightness;
-	double* coldWarm;
-	int* hue;
+	std::function<void(const RGB&)> colorClicked;
 };
 
 #endif // PALETTE_WIDGET_H

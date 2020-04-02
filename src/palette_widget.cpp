@@ -1,6 +1,7 @@
 #include "palette_widget.h"
 
 #include "palette.h"
+#include <wx/dcbuffer.h>
 
 class PaletteWidget::DrawPanel : public wxPanel
 {
@@ -13,6 +14,7 @@ public:
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
 	void OnPaint(wxPaintEvent&);
+	void OnErase(wxEraseEvent&);
 	void OnClick(wxMouseEvent& event);
 	void Render(wxDC& dc);
 
@@ -25,6 +27,7 @@ private:
 
 BEGIN_EVENT_TABLE(PaletteWidget::DrawPanel, wxPanel)
 	EVT_PAINT(PaletteWidget::DrawPanel::OnPaint)
+	EVT_ERASE_BACKGROUND(PaletteWidget::DrawPanel::OnErase)
 	EVT_LEFT_DOWN(PaletteWidget::DrawPanel::OnClick)
 END_EVENT_TABLE()
 
@@ -41,9 +44,13 @@ PaletteWidget::DrawPanel::DrawPanel(
 {
 }
 
+void PaletteWidget::DrawPanel::OnErase(wxEraseEvent&)
+{
+}
+
 void PaletteWidget::DrawPanel::OnPaint(wxPaintEvent&)
 {
-	wxClientDC dc(this);
+	wxBufferedPaintDC dc(this);
 	Render(dc);
 }
 
@@ -74,25 +81,13 @@ PaletteWidget::PaletteWidget(
 	wxWindow* parent,
 	int* numColors,
 	double* gamma,
-	PaletteType type,
-	const double (**M)[3][3],
-	const double (**M_INV)[3][3],
-	double* contrast,
-	double* saturation,
-	double* brightness,
-	double* coldWarm,
-	int* hue) :
+	const double(**M_INV)[3][3],
+	std::unique_ptr<Palette>& palette) :
 	wxPanel(parent),
 	numColors(numColors),
 	gamma(gamma),
-	type(type),
-	M(M),
 	M_INV(M_INV),
-	contrast(contrast),
-	saturation(saturation),
-	brightness(brightness),
-	coldWarm(coldWarm),
-	hue(hue)
+	palette(palette)
 {
 	sizer = new wxBoxSizer(wxVERTICAL);
 	SetSizer(sizer);
@@ -103,15 +98,6 @@ PaletteWidget::PaletteWidget(
 void PaletteWidget::GeneratePalette()
 {
 	int N = *numColors;
-
-	palette = std::make_unique<SeqPalette>(generateSeqPalette(
-		**M,
-		*gamma,
-		*hue,
-		*saturation,
-		*brightness,
-		*contrast,
-		*coldWarm));
 	auto colors = generateColors(*palette, N);
 
 	Freeze();
@@ -143,22 +129,4 @@ void PaletteWidget::GeneratePalette()
 void PaletteWidget::SetColorCallback(std::function<void(const RGB&)> cb)
 {
 	colorClicked = cb;
-}
-
-std::unique_ptr<Palette> PaletteWidget::CreatePalette()
-{
-	switch (type)
-	{
-	case PaletteType::Sequential:
-		return std::make_unique<SeqPalette>();
-	case PaletteType::Bivariate:
-		return std::make_unique<DivPalette>();
-	case PaletteType::Qualitative:
-		return std::make_unique<QualPalette>();
-	}
-}
-
-void PaletteWidget::SetPaletteType(PaletteType type)
-{
-	this->type = type;
 }

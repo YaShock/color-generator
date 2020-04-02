@@ -2,6 +2,7 @@
 
 #include "color_picker.h"
 #include "utils.h"
+#include "palette.h"
 
 namespace
 {
@@ -13,6 +14,8 @@ enum SliderIDs
 	SLIDER_BRIGHTNESS,
 	SLIDER_COLD_WARM,
 	SLIDER_HUE,
+	SLIDER_HUE_PRIMARY,
+	SLIDER_HUE_SECONDARY,
 	SPIN_NUM_COLORS,
 	SPIN_GAMMA,
 	CHOICE_SPACE,
@@ -22,15 +25,16 @@ enum SliderIDs
 void AddTextAndSlider(
 	wxFrame* parent,
 	wxFlexGridSizer* sizer,
+	wxStaticText** text,
 	wxSlider** slider,
 	const wxString& label,
 	int sliderID,
 	int minValue = 0,
 	int maxValue = 100)
 {
-	auto staticText = new wxStaticText(parent, wxID_ANY, label, wxDefaultPosition, wxDefaultSize, 0);
-	staticText->Wrap( -1 );
-	sizer->Add(staticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	*text = new wxStaticText(parent, wxID_ANY, label, wxDefaultPosition, wxDefaultSize, 0);
+	(*text)->Wrap( -1 );
+	sizer->Add(*text, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 	*slider = new wxSlider(parent, sliderID, 0, minValue, maxValue, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_VALUE_LABEL);
 	sizer->Add(*slider, 0, wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND, 5 );
@@ -56,12 +60,6 @@ AppFrame::AppFrame(
 
 void AppFrame::SetDefaultValues()
 {
-	contrast = 0.88;
-	saturation = 0.6;
-	brightness = 0.75;
-	coldWarm = 0.15;
-	hue = 0;
-
 	numColors = 8;
 	gamma = 2.2;
 	paletteType = PaletteType::Sequential;
@@ -123,22 +121,33 @@ void AppFrame::SetupUI()
 	mainSizer->Add(choicePaletteType, 0, wxALL|wxEXPAND, 5);
 
 	wxFlexGridSizer* tableControls;
-	tableControls = new wxFlexGridSizer(5, 2, 0, 0);
+	tableControls = new wxFlexGridSizer(10, 2, 0, 0);
 	tableControls->AddGrowableCol(1);
 	tableControls->SetFlexibleDirection(wxHORIZONTAL);
 	tableControls->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
 
-	AddTextAndSlider(this, tableControls, &sliderContrast, wxT("Contrast:"), SLIDER_CONSTRAST);
-	AddTextAndSlider(this, tableControls, &sliderSaturation, wxT("Saturation:"), SLIDER_SATURATION);
-	AddTextAndSlider(this, tableControls, &sliderBrightness, wxT("Brightness:"), SLIDER_BRIGHTNESS);
-	AddTextAndSlider(this, tableControls, &sliderColdWarm, wxT("Cold/Warm:"), SLIDER_COLD_WARM);
-	AddTextAndSlider(this, tableControls, &sliderHue, wxT("Hue:"), SLIDER_HUE, 0, 359);
+	AddTextAndSlider(this, tableControls, &textContrast, &sliderContrast, wxT("Contrast:"), SLIDER_CONSTRAST);
+	AddTextAndSlider(this, tableControls, &textSaturation, &sliderSaturation, wxT("Saturation:"), SLIDER_SATURATION);
+	AddTextAndSlider(this, tableControls, &textBrightness, &sliderBrightness, wxT("Brightness:"), SLIDER_BRIGHTNESS);
+	AddTextAndSlider(this, tableControls, &textColdWarm, &sliderColdWarm, wxT("Cold/Warm:"), SLIDER_COLD_WARM);
+	AddTextAndSlider(this, tableControls, &textHue, &sliderHue, wxT("Hue:"), SLIDER_HUE, 0, 359);
+	AddTextAndSlider(this, tableControls, &textHue0, &sliderHue0, wxT("Hue primary:"), SLIDER_HUE_PRIMARY, 0, 359);
+	AddTextAndSlider(this, tableControls, &textHue1, &sliderHue1, wxT("Hue secondary:"), SLIDER_HUE_SECONDARY, 0, 359);
+	AddTextAndSlider(this, tableControls, &textMidPoint, &sliderMidPoint, wxT("Midpoint:"), SLIDER_HUE);
+	AddTextAndSlider(this, tableControls, &textHueRange, &sliderHueRange, wxT("Hue range:"), SLIDER_HUE);
+	AddTextAndSlider(this, tableControls, &textHueShift, &sliderHueShift, wxT("Hue shift:"), SLIDER_HUE);
 
-	sliderContrast->SetValue(int(contrast * 100));
-	sliderSaturation->SetValue(int(saturation * 100));
-	sliderBrightness->SetValue(int(brightness * 100));
-	sliderColdWarm->SetValue(int(coldWarm * 100));
-	sliderHue->SetValue(hue);
+	// Default values
+	sliderContrast->SetValue(int(88));
+	sliderSaturation->SetValue(int(60));
+	sliderBrightness->SetValue(int(75));
+	sliderColdWarm->SetValue(int(15));
+	sliderHue->SetValue(0);
+	sliderHue0->SetValue(0);
+	sliderHue1->SetValue(0);
+	sliderMidPoint->SetValue(50);
+	sliderHueRange->SetValue(0);
+	sliderHueShift->SetValue(0);
 	spinGamma->SetValue(gamma);
 
 	mainSizer->Add(tableControls, 0, wxEXPAND, 5);
@@ -152,16 +161,28 @@ void AppFrame::SetupUI()
 		sliderSaturation,
 		sliderContrast,
 		sliderBrightness,
-		sliderColdWarm
+		sliderColdWarm,
+		textHue,
+		textSaturation,
+		textContrast,
+		textBrightness,
+		textColdWarm
 	};
 	widgetsDiv = {
-		sliderHue0,
-		sliderHue0,
 		sliderSaturation,
 		sliderContrast,
 		sliderBrightness,
 		sliderColdWarm,
-		sliderMidPoint
+		sliderHue0,
+		sliderHue1,
+		sliderMidPoint,
+		textSaturation,
+		textContrast,
+		textBrightness,
+		textColdWarm,
+		textHue0,
+		textHue1,
+		textMidPoint
 	};
 
 	widgetsQual = {
@@ -169,21 +190,22 @@ void AppFrame::SetupUI()
 		sliderContrast,
 		sliderBrightness,
 		sliderHueRange,
-		sliderHueShift
+		sliderHueShift,
+		textSaturation,
+		textContrast,
+		textBrightness,
+		textHueRange,
+		textHueShift
 	};
 
+	SetPaletteTypeWidgets();
+	SetupPalette();
 	paletteWidget = new PaletteWidget(
 		this,
 		&numColors,
 		&gamma,
-		&paletteType,
-		&M,
 		&M_INV,
-		&contrast,
-		&saturation,
-		&brightness,
-		&coldWarm,
-		&hue);
+		palette);
 
 	mainSizer->Add(paletteWidget, 1, wxEXPAND|wxALL, 5);
 
@@ -201,6 +223,11 @@ void AppFrame::BindControls()
 	sliderBrightness->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
 	sliderColdWarm->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
 	sliderHue->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderHue0->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderHue1->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderHueRange->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderHueShift->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
+	sliderMidPoint->Bind(wxEVT_SLIDER, &AppFrame::OnSlider, this);
 	spinGamma->Bind(wxEVT_SPINCTRLDOUBLE, &AppFrame::OnSpin, this);
 	choiceColorSpace->Bind(wxEVT_CHOICE, &AppFrame::OnSlider, this);
 }
@@ -226,21 +253,6 @@ void AppFrame::OnSlider(wxCommandEvent& event)
 	int s = choiceColorSpace->GetCurrentSelection();
 	switch (event.GetId())
 	{
-	case SLIDER_CONSTRAST:
-		contrast = sliderContrast->GetValue() / 100.0;
-		break;
-	case SLIDER_SATURATION:
-		saturation = sliderSaturation->GetValue() / 100.0;
-		break;
-	case SLIDER_BRIGHTNESS:
-		brightness = sliderBrightness->GetValue() / 100.0;
-		break;
-	case SLIDER_COLD_WARM:
-		coldWarm = sliderColdWarm->GetValue() / 100.0;
-		break;
-	case SLIDER_HUE:
-		hue = sliderHue->GetValue();
-		break;
 	case CHOICE_SPACE:
 		if (choiceColorSpace->GetString(s) == wxT("SRGB"))
 		{
@@ -259,63 +271,78 @@ void AppFrame::OnSlider(wxCommandEvent& event)
 	RefreshPalette();
 }
 
+void AppFrame::SetPaletteTypeWidgets()
+{
+	for (auto widget : widgetsSeq)
+	{
+		widget->Hide();
+	}
+	for (auto widget : widgetsDiv)
+	{
+		widget->Hide();
+	}
+	for (auto widget : widgetsQual)
+	{
+		widget->Hide();
+	}
+
+	//Activate only current scales and labels
+	if (paletteType == PaletteType::Sequential)
+	{
+		for (auto widget : widgetsSeq)
+		{
+			widget->Show();
+		}
+	}
+	else if (paletteType == PaletteType::Bivariate)
+	{
+		for (auto widget : widgetsDiv)
+		{
+			widget->Show();
+		}
+	}
+	else if (paletteType == PaletteType::Qualitative)
+	{
+		for (auto widget : widgetsQual)
+		{
+			widget->Show();
+		}
+	}
+
+}
+
 void AppFrame::OnPaletteType(wxCommandEvent&)
 {
 	int s = choicePaletteType->GetCurrentSelection();
-	if (choicePaletteType->GetString(s) == wxT("Sequential"))
+
+	if (choicePaletteType->GetString(s) == wxT("Sequential") &&
+		paletteType != PaletteType::Sequential)
 	{
 		paletteType = PaletteType::Sequential;
+		SetPaletteTypeWidgets();
+		RefreshPalette();
 	}
-	else if (choicePaletteType->GetString(s) == wxT("Bivariate"))
+	else if (choicePaletteType->GetString(s) == wxT("Bivariate") &&
+		paletteType != PaletteType::Bivariate)
 	{
 		paletteType = PaletteType::Bivariate;
+		SetPaletteTypeWidgets();
+		RefreshPalette();
 	}
-	else if (choicePaletteType->GetString(s) == wxT("Qualitative"))
+	else if (choicePaletteType->GetString(s) == wxT("Qualitative") &&
+		paletteType != PaletteType::Qualitative)
 	{
 		paletteType = PaletteType::Qualitative;
+		SetPaletteTypeWidgets();
+		RefreshPalette();
 	}
-
-	/*
-	foreach (widget; widgetsSeq) {
-		if (widget.isVisible()) {
-			widget.hide();
-		}
-	}
-	foreach (widget; widgetsDiv) {
-		if (widget.isVisible()) {
-			widget.hide();
-		}
-	}
-	foreach (widget; widgetsQual) {
-		if (widget.isVisible()) {
-			widget.hide();
-		}
-	}
-	 //Activate only current scales and labels
-	if (type == "Sequential") {
-		foreach (widget; widgetsSeq) {
-			widget.show();
-		}
-	}
-	else if (type == "Bivariate") {
-		foreach (widget; widgetsDiv) {
-			widget.show();
-		}
-	}
-	else {
-		foreach (widget; widgetsQual) {
-			widget.show();
-		}
-	}
-
-	RefreshPalette();
-	*/
 }
 
 void AppFrame::RefreshPalette()
 {
 	auto oldSize = GetSize();
 
+	SetupPalette();
 	paletteWidget->GeneratePalette();
 	SetSizerAndFit(mainSizer);
 	Layout();
@@ -323,4 +350,58 @@ void AppFrame::RefreshPalette()
 	SetSize(
 		std::max(GetSize().GetWidth(), oldSize.GetWidth()),
 		std::max(GetSize().GetHeight(), oldSize.GetHeight()));
+}
+
+void AppFrame::SetupPalette()
+{
+	double hue = sliderHue->GetValue();
+	double hue0 = sliderHue0->GetValue();
+	double hue1 = sliderHue1->GetValue();
+	double saturation = sliderSaturation->GetValue() / 100.0;
+	double brightness = sliderBrightness->GetValue() / 100.0;
+	double contrast = sliderContrast->GetValue() / 100.0;
+	double coldWarm = sliderColdWarm->GetValue() / 100.0;
+	double midPoint = sliderMidPoint->GetValue() / 100.0;
+	double hueShift = sliderHueShift->GetValue() / 100.0;
+	double hueRange = sliderHueRange->GetValue() / 100.0;
+	switch (paletteType)
+	{
+	case PaletteType::Sequential:
+		palette.reset(new SeqPalette(
+			generateSeqPalette(
+				*M,
+				gamma,
+				hue,
+				saturation,
+				brightness,
+				contrast,
+				coldWarm)));
+		break;
+	case PaletteType::Bivariate:
+		palette.reset(new DivPalette(
+			generateDivPalette(
+				*M,
+				gamma,
+				hue0,
+				hue1,
+				saturation,
+				brightness,
+				contrast,
+				coldWarm,
+				midPoint)));
+		break;
+	case PaletteType::Qualitative:
+		palette.reset(new QualPalette(
+			generateQualPalette(
+				*M,
+				gamma,
+				hueShift,
+				hueRange,
+				saturation,
+				brightness,
+				contrast)));
+		break;
+	default:
+		break;
+	}
 }
