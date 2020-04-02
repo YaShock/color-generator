@@ -46,7 +46,7 @@ AppFrame::AppFrame(
 	const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size)
-	: wxFrame(nullptr, -1, title, pos, size)
+	: wxFrame(nullptr, -1, title, pos, size, wxDEFAULT_FRAME_STYLE ^ wxRESIZE_BORDER)
 {
 	SetDefaultValues();
 	SetupUI();
@@ -347,9 +347,9 @@ void AppFrame::RefreshPalette()
 	SetSizerAndFit(mainSizer);
 	Layout();
 
-	SetSize(
-		std::max(GetSize().GetWidth(), oldSize.GetWidth()),
-		std::max(GetSize().GetHeight(), oldSize.GetHeight()));
+	//SetSize(
+	//	std::max(GetSize().GetWidth(), oldSize.GetWidth()),
+	//	std::max(GetSize().GetHeight(), oldSize.GetHeight()));
 }
 
 void AppFrame::SetupPalette()
