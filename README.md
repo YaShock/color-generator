@@ -18,12 +18,16 @@ Binaries are provided for Linux via AppImage and Windows via an installer.
 
 ### Linux
 
-Requires a GTK runtime. If installed, just download the AppImage and make it runnable:
+Just download the AppImage and make it executable:
 `chmod a+x ColorGenerator-x86_64.AppImage`
 
 ### Windows
 
 Just download and run the installer, no runtime is required because it is bundled with the application.
+
+### MacOS
+
+TODO
 
 ## Building
 
@@ -35,11 +39,11 @@ Simply run CMake to generate a Makefile and then use make to build. If you insta
 
 ### Windows
 
-The wxWigets libary has to be installed or manually build (I prefer the latter case). Using CMake GUI you can set the wxWidgets path after running _configure_.
+The wxWidgets library has to be installed or manually build (I prefer the latter case). Using CMake GUI you can set the wxWidgets path after running _configure_.
 
-Mac OS
+### MacOS
 
-#### TODO
+Download and build the wxWidgets library. Ater that you can use CMake to generate Unix Makefiles. If CMake fails to find wxWidgets, configure wxWidgets_CONFIG_EXECUTABLE flag to wx-config executable. It should be under the build directory in wxWidgets root. After generating Makefile just run _make_.
 
 ## Deploying
 
@@ -48,12 +52,12 @@ There are scripts for creating a windows installer and linux AppImage in /script
 ### Linux
 
 Preferred way is to use linuxdeploy and appimagetool.
-Modify the script/linux/build_appimage.sh and change the path to these tools. Run the script and it will produce the AppImage.
+Modify the script/linux/build_appimage.sh and change the path to these tools. Run the script from the _scripts/linux_ directory and it will produce the AppImage in _bin_.
 
 ### Windows
 
 Install InnoSetup in order to create installer for the application. You should be able to just compile the script found in _scripts/windows_, which produces a Windows installer.
 
-### Mac OS
+### MacOS
 
 TODO
