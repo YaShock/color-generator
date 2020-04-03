@@ -4,7 +4,7 @@
 #define MyAppName "Color Generator"
 #define MyAppVersion "0.2"
 #define MyAppExeName "color-generator.exe"
-#define RootDir "{SourcePath}\..\.."
+#define RootDir SourcePath + "\..\.."
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -29,7 +29,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "{#RootDir}\bin\color-generator.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "{#RootDir}\bin\Release\color-generator.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

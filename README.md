@@ -39,7 +39,7 @@ Simply run CMake to generate a Makefile and then use make to build. If you insta
 
 ### Windows
 
-The wxWidgets library has to be installed or manually build (I prefer the latter case). Using CMake GUI you can set the wxWidgets path after running _configure_.
+The wxWidgets library has to be installed or manually build (I prefer the latter case). When building the library choose the static build. Using CMake GUI you can set the wxWidgets path after running _configure_. Then set up the project to build statically as well.
 
 ### MacOS
 
