@@ -50,7 +50,7 @@ void PaletteWidget::DrawPanel::OnErase(wxEraseEvent&)
 
 void PaletteWidget::DrawPanel::OnPaint(wxPaintEvent&)
 {
-	wxBufferedPaintDC dc(this);
+	wxAutoBufferedPaintDC dc(this);
 	Render(dc);
 }
 

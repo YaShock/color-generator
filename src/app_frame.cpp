@@ -85,7 +85,8 @@ void AppFrame::SetupUI()
 
 	spinGamma = new wxSpinCtrlDouble(this, SPIN_GAMMA, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 3, 1, 0.1);
 	spinGamma->SetDigits(1);
-	spinGamma->SetMinSize(wxSize(50, 30));
+	wxSize size = spinGamma->GetSizeFromTextSize(spinGamma->GetTextExtent("2.2"));
+	spinGamma->SetMinSize(size);
 	SizerGamma->Add(spinGamma, 0, wxALIGN_CENTER|wxALL, 5);
 
 	wxString ChoiceColorSpaceChoices[] = { wxT("SRGB"), wxT("AdobeRGB"), wxEmptyString };
