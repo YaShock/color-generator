@@ -54,6 +54,9 @@ There are scripts for creating a windows installer and linux AppImage in /script
 Preferred way is to use linuxdeploy, linuxdeploy gtk plugin and appimagetool.
 Modify the script/linux/build_appimage.sh and change the path to these tools. Run the script from the _scripts/linux_ directory and it will produce the AppImage in _bin_.
 
+#### Prerequisites:
+Build wxWidgets statically. Use the following configuration: --with-gtk=3 --disable-shared --enable-monolithic
+
 ### Windows
 
 Install InnoSetup in order to create installer for the application. You should be able to just compile the script found in _scripts/windows_, which produces a Windows installer.
