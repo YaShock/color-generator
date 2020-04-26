@@ -52,10 +52,10 @@ There are scripts for creating a windows installer and linux AppImage in /script
 ### Linux
 
 Preferred way is to use linuxdeploy, linuxdeploy gtk plugin and appimagetool.
-Modify the script/linux/build_appimage.sh and change the path to these tools. Run the script from the _scripts/linux_ directory and it will produce the AppImage in _bin_.
+Modify the script/linux/build_appimage.sh and change the path to these tools. Run the script from the _scripts/linux_ directory and it will produce the AppImage in _bin_. For some reason the AppImage structure produced does not support gtk3, therefore for releases I compiled via gtk2.
 
 #### Prerequisites:
-Build wxWidgets statically. Use the following configuration: --with-gtk=3 --disable-shared --enable-monolithic
+Build wxWidgets statically. Use the following configuration: --with-gtk=2 --disable-shared --enable-monolithic
 
 ### Windows
 
